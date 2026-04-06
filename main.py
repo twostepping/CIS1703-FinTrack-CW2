@@ -3,16 +3,149 @@
 # go back feature
 # could improve report visuals further
 
+# domain entities: 
+# base class: transaction(ID, date, amount, description)
+# subclass 1: income (adds: source, isTaxable)
+# subclass 2: expense (adds: category, importance level [need/want])
+# subclass 3: recurringBill (adds: frequency, nextDueDate)
+
+# functional requirements:
+# transaction manager: add, view, categorise income and expenses
+# smart forecasting: a function to project the user's balance for next 30 days based on current balance and recurringBill
+# budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
+# reporting: genere a summary showing needs vs wants
+
 import json
 import os
 from datetime import datetime
+import tkinter as tk
+from tkinter import messagebox
 
 FILE = "data.json"
 
+root = tk.Tk()
+root.title("FinTrack")
+root.geometry("420x480")
+
+titleLabel = tk.Label(root, text="FinTrack", font=("Arial", 12))
+titleLabel.pack()
+
+
+
+
+
+# transactionFrame - decided to make the transaction history always visible, change if needed
+transactionFrame = tk.Frame(root)
+transactionFrame.pack()
+
+# listbox + scrollbar
+transactionListbox = tk.Listbox(transactionFrame, font=("Arial", 12))
+transactionListbox.pack(side="left")
+transactionScrollbar = tk.Scrollbar(transactionFrame, command=transactionListbox.yview)
+transactionScrollbar.pack(side="right", fill="y")
+
+
+
+
+# mainFrame - CONTAINS ALL MAIN MENU BUTTONS
+mainFrame = tk.Frame(root)
+
+# all available options
+addIncomeButton = tk.Button(mainFrame, text="Add Income", font=("Arial", 12), command = lambda:showIncomeFrame())
+addExpenseButton = tk.Button(mainFrame, text="Add Expense", font=("Arial", 12), command = lambda:showExpenseFrame())
+reportButton = tk.Button(mainFrame, text="Generate Report", font=("Arial", 12))
+
+# put everything on grid
+addIncomeButton.grid(row=0, column=0)
+addExpenseButton.grid(row=0, column=1)
+reportButton.grid(row=1, column=0)
+
+
+
+
+
+# incomeFrame - ADD INCOME
+incomeFrame = tk.Frame(root)
+
+# income amount/source
+incomeEntryLabel = tk.Label(incomeFrame, text= "Income: ", font=("Arial", 12))
+incomeEntry = tk.Entry(incomeFrame, font=("Arial", 12))
+incomeSourceLabel = tk.Label(incomeFrame, text="Source: ", font=("Arial", 12))
+incomeSourceEntry = tk.Entry(incomeFrame, font=("Arial", 12))
+
+# taxable radiobuttons
+taxableOption = tk.IntVar()
+taxableLabel = tk.Label (incomeFrame, text="Taxable: ", font=("Arial", 12))
+taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value=1, variable=taxableOption)
+taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value=2, variable=taxableOption)
+
+# put everythign on grid
+incomeEntryLabel.grid(row=0, column=0)
+incomeEntry.grid(row=0, column=1)
+incomeSourceLabel.grid(row=1, column=0)
+incomeSourceEntry.grid(row=1, column=1)
+taxableLabel.grid(row=2, column=0)
+taxableRadio0.grid(row=2, column=1)
+taxableRadio1.grid(row=2, column=2)
+
+# exit button
+exitIncomeButton = tk.Button(incomeFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitIncomeButton.grid(row=3, column=0, columnspan=3)
+
+
+
+
+
+# expenseFrame - ADD EXPENSES
+expenseFrame = tk.Frame()
+
+# expense amount/cateogry 
+expenseEntryLabel = tk.Label(expenseFrame, text="Expense: ", font=("Arial", 12))
+expenseEntry = tk.Entry(expenseFrame, font=("Arial", 12))
+categoryLabel = tk.Label(expenseFrame, text="Category:", font=("Arial", 12))
+categoryEntry = tk.Entry(expenseFrame, font=("Arial", 12))
+
+# importances radio buttons
+importanceOption = tk.IntVar()
+importanceLabel = tk.Label(expenseFrame, text="Importance: ", font=("Arial", 12))
+importanceRadio0 = tk.Radiobutton(expenseFrame, text="Need", font=("Arial", 12), value=1, variable=importanceOption)
+importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12), value=2, variable=importanceOption)
+
+# put evetrything on the grid
+expenseEntryLabel.grid(row=0, column=0)
+expenseEntry.grid(row=0, column=1)
+categoryLabel.grid(row=1, column=0)
+categoryEntry.grid(row=1, column=1)
+importanceLabel.grid(row=2, column=0)
+importanceRadio0.grid(row=2, column=1)
+importanceRadio1.grid(row=2, column=2)
+
+#exit button
+exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitExpenseButton.grid(row=3, column=0, columnspan=3)
+
+
+
+
+ # all functions to switch menus
+ # could probably be combined into a single function, if we take the current frame as a parameter
+def showMainFrame():
+    incomeFrame.pack_forget()
+    expenseFrame.pack_forget()
+    mainFrame.pack()
+
+def showIncomeFrame():
+    mainFrame.pack_forget()
+    incomeFrame.pack()
+    
+def showExpenseFrame():
+    mainFrame.pack_forget()
+    expenseFrame.pack()
+
+showMainFrame()
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
-
 
 def header(title="FinTrack"):
     print("=" * 50)
