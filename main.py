@@ -17,7 +17,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import tkinter as tk
 from tkinter import messagebox
 
@@ -25,6 +25,7 @@ FILE = "data.json"
 
 
 
+# FOR CLI
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -44,43 +45,77 @@ def screen(title):
 
 
 # Classes
-class Transaction:
+class Transaction():
     def __init__(self, id, date, amount, desc):
-        self._id = id
-        self._date = date
-        self._amount = amount
-        self._desc = desc
+        self.__id = id
+        self.__date = date
+        self.__amount = amount
+        self.__desc = desc
+
+    # GETTERS
+    def getID(self):
+        return self.__id
+    def getDate(self):
+        return self.__date
+    def getAmount(self):
+        return self.__amount
+    def getDesc(self):
+        return self.__desc
 
     def display(self):
-        return f"{self._date:<12} £{self._amount:<8} {self._desc}"
+        return f"{self.__date:<12} £{self.__amount:<8} {self.__desc}"
 
 
 class Income(Transaction):
     def __init__(self, id, date, amount, desc, source):
         super().__init__(id, date, amount, desc)
-        self.source = source
+        self.__source = source
+
+    # GETTERS
+    def getSource(self):
+        return self.__source
 
     def display(self):
-        return f"[INCOME]  {super().display()} | {self.source}"
+        return f"[INCOME]  {super().display()} | {self.__source}"
 
 
 class Expense(Transaction):
     def __init__(self, id, date, amount, desc, category, importance):
         super().__init__(id, date, amount, desc)
-        self.category = category
-        self.importance = importance
+        self.__category = category
+        self.__importance = importance
+
+    # GETTERS
+    def getCateogry(self):
+        return self.__category
+    def getImpotance(self):
+        return self.__importance
 
     def display(self):
-        return f"[EXPENSE] {super().display()} | {self.category} ({self.importance})"
+        return f"[EXPENSE] {super().display()} | {self.__category} ({self.__importance})"
 
 
 class RecurringBill(Transaction):
-    def __init__(self, id, date, amount, desc, frequency):
+    def __init__(self, id, date, amount, desc, frequency, nextDueDate = None):
         super().__init__(id, date, amount, desc)
-        self.frequency = frequency
+        self.__frequency = frequency
+        self.__nextDueDate = nextDueDate
+
+    # GETTERS
+    def getFrequency(self):
+        return self.__frequency
+    def getDueDate(self):
+        return self.__nextDueDate
+    
+    def updateDueDate(self, date=None):
+        if date != None:
+            self.__nextDueDate = date
+        else:
+            self.__nextDueDate = self.__nextDueDate + timedelta(days=self.__frequency)
 
     def display(self):
-        return f"[BILL]    {super().display()} | {self.frequency}"
+        return f"[BILL]    {super().display()} | {self.__frequency}"
+
 
 
 # File
