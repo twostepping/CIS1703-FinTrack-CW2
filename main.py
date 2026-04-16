@@ -101,7 +101,7 @@ class RecurringBill(Transaction):
         self.__frequency = frequency
         self.__nextDueDate = nextDueDate
 
-    # GETTERS
+    # GETTERS 
     def getFrequency(self):
         return self.__frequency
     def getDueDate(self):
