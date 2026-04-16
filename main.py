@@ -13,7 +13,7 @@
 # transaction manager: add, view, categorise income and expenses
 # smart forecasting: a function to project the user's balance for next 30 days based on current balance and recurringBill
 # budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
-# reporting: generate a summary showing needs vs wants
+# reporting: generate a summary showing needs vs wants for the user
 
 import json
 import os
