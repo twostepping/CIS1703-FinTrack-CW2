@@ -25,7 +25,7 @@ FILE = "data.json"
 
 
 
-# FOR CLI
+# FOR CLI  
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
