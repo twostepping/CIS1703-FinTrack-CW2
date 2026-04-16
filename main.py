@@ -343,7 +343,7 @@ titleLabel.pack()
 transactionFrame = tk.Frame(root)
 transactionFrame.pack()
 
-# listbox + scrollbar
+# listbox + scrollbar  
 transactionListbox = tk.Listbox(transactionFrame, font=("Arial", 12))
 transactionListbox.pack(side="left")
 transactionScrollbar = tk.Scrollbar(transactionFrame, command=transactionListbox.yview)
