@@ -416,7 +416,7 @@ confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 1
 confirmIncomeButton.grid(row=5, column=0, columnspan=5)
 
 
-# exit button
+# exit button 
 exitIncomeButton = tk.Button(incomeFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
 exitIncomeButton.grid(row=6, column=0, columnspan=5)
 
