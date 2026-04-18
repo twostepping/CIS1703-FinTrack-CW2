@@ -218,6 +218,23 @@ def add_expense(date, amt, desc, cat, imp):
 
     save_data(data)
 
+def add_bill(date, amt, desc, freq):
+    
+    obj = RecurringBill(new_id(data), date, round(float(amt), 2), desc, freq)
+    
+    data.append({
+        "type": "bill",
+        "id": obj.getID(),
+        "date": obj.getDate(),
+        "amount": obj.getAmount(),
+        "desc": obj.getDesc(),
+        "frequency": obj.getFrequency()
+    })
+    
+    transactionListbox.insert("end", f"bill - {obj.getDate()} - £{obj.getAmount()} from {obj.getDesc()} days - {obj.getFrequency()}")
+    
+    save_data(data)
+
 '''
 def add_bill():
     screen("Add Recurring Bill")
@@ -345,6 +362,8 @@ titleLabel = tk.Label(root, text="FinTrack", font=("Arial", 12))
 titleLabel.pack()
 
 
+
+
 # transactionFrame - decided to make the transaction history always visible, change if needed
 transactionFrame = tk.Frame(root)
 transactionFrame.pack()
@@ -371,11 +390,13 @@ mainFrame = tk.Frame(root)
 # all available options
 addIncomeButton = tk.Button(mainFrame, text="Add Income", font=("Arial", 12), command = lambda:showIncomeFrame())
 addExpenseButton = tk.Button(mainFrame, text="Add Expense", font=("Arial", 12), command = lambda:showExpenseFrame())
+addRecurringBill = tk.Button(mainFrame, text="Add Bill", font=("Arial", 12), command = lambda:showBillFrame())
 reportButton = tk.Button(mainFrame, text="Generate Report", font=("Arial", 12))
 
 # put everything on grid
 addIncomeButton.grid(row=0, column=0)
 addExpenseButton.grid(row=0, column=1)
+addRecurringBill.grid(row=0, column=2)
 reportButton.grid(row=1, column=0)
 
 
@@ -460,14 +481,57 @@ importanceLabel.grid(row=4, column=0)
 importanceRadio0.grid(row=4, column=1)
 importanceRadio1.grid(row=4, column=2)
 
-#exit button
-exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitExpenseButton.grid(row=6, column=0, columnspan=3)
-
 #Confirm adding expense button
 confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), categoryEntry.get(), importanceOption.get()) )
 confirmExpenseButton.grid(row=5, column=0, columnspan=3)
 
+#exit button
+exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitExpenseButton.grid(row=6, column=0, columnspan=3)
+
+
+
+
+
+# billFrame - lets you add/cancel recurring bills
+billFrame = tk.Frame(root)
+
+# bill amount/desc/frequency/date
+billAmountLabel = tk.Label(billFrame, text="Amount: ", font=("Arial", 12))
+billAmountEntry = tk.Entry(billFrame, font=("Arial", 12))
+billDescriptionLabel = tk.Label(billFrame, text="Description: ", font=("Arial", 12))
+billDescriptionEntry = tk.Entry(billFrame, font=("Arial", 12))
+billDateLabel = tk.Label(billFrame, text=f"Date: ", font=('Arial', 12))
+billDateEntry = tk.Entry(billFrame, font=("Arial", 12))
+billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+billFrequencyLabel = tk.Label(billFrame, text="Frequency (days): ", font=("Arial", 12))
+billFrequencyEntry = tk.Entry(billFrame, font=("Arial", 12))
+billDueDateButton = tk.Button(billFrame, text="Calculate Due Date ", font=("Arial", 12), command=lambda: calculateDueDate())
+billDueDateLabel = tk.Label(billFrame, font=("Arial", 12))
+
+# calculate due date
+def calculateDueDate():
+    billDueDateLabel.config(text=f"{(datetime.strptime(billDateEntry.get(), "%d/%m/%Y") + timedelta(days=int(billFrequencyEntry.get()))).strftime("%d/%m/%Y")}")
+
+#put everything on the grid
+billAmountLabel.grid(row=0, column=0)
+billAmountEntry.grid(row=0, column=1)
+billDescriptionLabel.grid(row=1, column=0)
+billDescriptionEntry.grid(row=1, column=1)
+billDateLabel.grid(row=2, column=0)
+billDateEntry.grid(row=2, column=1)
+billFrequencyLabel.grid(row=3, column=0)
+billFrequencyEntry.grid(row=3, column=1)
+billDueDateButton.grid(row=4, column=0)
+billDueDateLabel.grid(row=4, column=1)
+
+#confirm adding bill button
+confirmBillButton = tk.Button(billFrame, text="Add Recurring Bill", font=("Arial", 12), command=lambda:add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
+confirmBillButton.grid(row=5, column=0, columnspan=3)
+
+#exit button
+exitBillButton = tk.Button(billFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitBillButton.grid(row=6, column=0, columnspan=2)
 
 
 
@@ -477,6 +541,7 @@ confirmExpenseButton.grid(row=5, column=0, columnspan=3)
 def showMainFrame():
     incomeFrame.pack_forget()
     expenseFrame.pack_forget()
+    billFrame.pack_forget()
     mainFrame.pack()
 
 def showIncomeFrame():
@@ -486,6 +551,10 @@ def showIncomeFrame():
 def showExpenseFrame():
     mainFrame.pack_forget()
     expenseFrame.pack()
+
+def showBillFrame():
+    mainFrame.pack_forget()
+    billFrame.pack()
 
 def buttonval():
     #validates adding income
