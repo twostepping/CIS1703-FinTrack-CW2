@@ -184,6 +184,8 @@ def add_income(date, amt, desc, src, taxable):
         "source": obj.getSource(),
         "taxable": obj.getTaxable()
     })
+    
+    transactionListbox.insert("end", f"income - {obj.getDate()} - £{obj.getAmount()} from {obj.getSource()} - {obj.getDesc()} - {obj.getTaxable()}")
 
     save_data(data)
 
@@ -211,9 +213,10 @@ def add_expense(date, amt, desc, cat, imp):
         "category": obj.getCategory(),
         "importance": obj.getImportance()
     })
+    
+    transactionListbox.insert("end", f"expense - {obj.getDate()} - £{obj.getAmount()} from {obj.getCategory()} - {obj.getDesc()} - {obj.getImportance()}")
 
     save_data(data)
-    showMainFrame()
 
 '''
 def add_bill():
@@ -347,13 +350,20 @@ transactionFrame = tk.Frame(root)
 transactionFrame.pack()
 
 # listbox + scrollbar  
-transactionListbox = tk.Listbox(transactionFrame, font=("Arial", 12))
+# we need an x scroll bar, current one gets put into the wrong place
+transactionListbox = tk.Listbox(transactionFrame, font=("Arial", 12), width = 40) # width is measured in charcters, not pixels for some reason
 transactionListbox.pack(side="left")
-transactionScrollbar = tk.Scrollbar(transactionFrame, command=transactionListbox.yview)
-transactionScrollbar.pack(side="right", fill="y")
+#transactionScrollbarX = tk.Scrollbar(transactionFrame, command=transactionListbox.xview, orient="horizontal")
+transactionScrollbarY = tk.Scrollbar(transactionFrame, command=transactionListbox.yview)
+#transactionScrollbarX.pack(side="bottom",fill="y")
+transactionScrollbarY.pack(side="right", fill="y")
 
-
-
+# add all existing data to the listbox
+for item in data:
+    if item['type'] == "income":
+        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['source']} - {item['desc']} - {item['taxable']}")
+    elif item['type'] == "expense":
+        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['category']} - {item['desc']} - {item['importance']}")
 
 # mainFrame - CONTAINS ALL MAIN MENU BUTTONS
 mainFrame = tk.Frame(root)
@@ -389,8 +399,8 @@ incomeDescriptionEntry = tk.Entry(incomeFrame, font=("Arial", 12))
 # taxable radiobuttons
 taxableOption = tk.IntVar()
 taxableLabel = tk.Label (incomeFrame, text="Taxable: ", font=("Arial", 12))
-taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value=1, variable=taxableOption)
-taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value=2, variable=taxableOption)
+taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value="taxable", variable=taxableOption)
+taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value="not taxable", variable=taxableOption)
 
 # put everythign on grid
 incomeEntryLabel.grid(row=0, column=0)
@@ -434,8 +444,8 @@ expenseDescriptionEntry = tk.Entry(expenseFrame, font=("Arial", 12))
 # importances radio buttons
 importanceOption = tk.StringVar(value="Need")
 importanceLabel = tk.Label(expenseFrame, text="Importance: ", font=("Arial", 12))
-importanceRadio0 = tk.Radiobutton(expenseFrame, text="Need", font=("Arial", 12), value='Need', variable=importanceOption)
-importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12), value='Want', variable=importanceOption)
+importanceRadio0 = tk.Radiobutton(expenseFrame, text="Need", font=("Arial", 12), value='need', variable=importanceOption)
+importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12), value='want', variable=importanceOption)
 
 # put evetrything on the grid
 expenseEntryLabel.grid(row=0, column=0)
@@ -477,7 +487,6 @@ def showExpenseFrame():
     mainFrame.pack_forget()
     expenseFrame.pack()
 
-
 def buttonval():
     #validates adding income
     if incomeFrame.winfo_ismapped():
@@ -492,12 +501,9 @@ def buttonval():
         else:
             confirmExpenseButton.config(state='disabled')
   
-
-
     root.after(10, buttonval)
 
 buttonval()
 showMainFrame()
-
 
 root.mainloop()
