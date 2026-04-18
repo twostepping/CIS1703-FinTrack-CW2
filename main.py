@@ -67,13 +67,16 @@ class Transaction():
 
 
 class Income(Transaction):
-    def __init__(self, id, date, amount, desc, source):
+    def __init__(self, id, date, amount, desc, source, taxable):
         super().__init__(id, date, amount, desc)
         self.__source = source
+        self.__taxable = taxable
 
     # GETTERS
     def getSource(self):
         return self.__source
+    def getTaxable(self):
+        return self.__taxable
 
     def display(self):
         return f"[INCOME]  {super().display()} | {self.__source}"
@@ -86,9 +89,9 @@ class Expense(Transaction):
         self.__importance = importance
 
     # GETTERS
-    def getCateogry(self):
+    def getCategory(self):
         return self.__category
-    def getImpotance(self):
+    def getImportance(self):
         return self.__importance
 
     def display(self):
@@ -168,21 +171,21 @@ data = load_data()
 
 
 
-def add_income(date, amt, desc, src):
+def add_income(date, amt, desc, src, taxable):
 
-    obj = Income(new_id(data), date, round(float(amt), 2), desc, src)
+    obj = Income(new_id(data), date, round(float(amt), 2), desc, src, taxable)
 
     data.append({
         "type": "income",
-        "id": obj._id,
-        "date": obj._date,
-        "amount": obj._amount,
-        "desc": obj._desc,
-        "source": obj.source
+        "id": obj.getID(),
+        "date": obj.getDate(),
+        "amount": obj.getAmount(),
+        "desc": obj.getDesc(),
+        "source": obj.getSource(),
+        "taxable": obj.getTaxable()
     })
 
     save_data(data)
-    showMainFrame()
 
 
 
@@ -201,12 +204,12 @@ def add_expense(date, amt, desc, cat, imp):
 
     data.append({
         "type": "expense",
-        "id": obj._id,
-        "date": obj._date,
-        "amount": obj._amount,
-        "desc": obj._desc,
-        "category": obj.category,
-        "importance": obj.importance
+        "id": obj.getID(),
+        "date": obj.getDate(),
+        "amount": obj.getAmount(),
+        "desc": obj.getDesc(),
+        "category": obj.getCategory(),
+        "importance": obj.getImportance()
     })
 
     save_data(data)
@@ -372,9 +375,6 @@ reportButton.grid(row=1, column=0)
 # incomeFrame - ADD INCOME
 incomeFrame = tk.Frame(root)
 
-
-
-
 # income amount/source/date/description
 incomeEntryLabel = tk.Label(incomeFrame, text= "Income: ", font=("Arial", 12))
 incomeEntry = tk.Entry(incomeFrame, font=("Arial", 12) )
@@ -392,8 +392,6 @@ taxableLabel = tk.Label (incomeFrame, text="Taxable: ", font=("Arial", 12))
 taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value=1, variable=taxableOption)
 taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value=2, variable=taxableOption)
 
-
-
 # put everythign on grid
 incomeEntryLabel.grid(row=0, column=0)
 incomeEntry.grid(row=0, column=1)
@@ -407,18 +405,15 @@ taxableLabel.grid(row=4, column=0)
 taxableRadio0.grid(row=4, column=1)
 taxableRadio1.grid(row=4, column=2)
 
-
-
-
 #Confirm adding income button
-
-confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get()))
+confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
 confirmIncomeButton.grid(row=5, column=0, columnspan=5)
-
 
 # exit button 
 exitIncomeButton = tk.Button(incomeFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
 exitIncomeButton.grid(row=6, column=0, columnspan=5)
+
+
 
 
 
@@ -436,14 +431,11 @@ expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
 expenseDescriptionLabel = tk.Label(expenseFrame, text="Description: ", font=('Arial', 12))
 expenseDescriptionEntry = tk.Entry(expenseFrame, font=("Arial", 12))
 
-
-
 # importances radio buttons
 importanceOption = tk.StringVar(value="Need")
 importanceLabel = tk.Label(expenseFrame, text="Importance: ", font=("Arial", 12))
 importanceRadio0 = tk.Radiobutton(expenseFrame, text="Need", font=("Arial", 12), value='Need', variable=importanceOption)
 importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12), value='Want', variable=importanceOption)
-
 
 # put evetrything on the grid
 expenseEntryLabel.grid(row=0, column=0)
@@ -462,12 +454,11 @@ importanceRadio1.grid(row=4, column=2)
 exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
 exitExpenseButton.grid(row=6, column=0, columnspan=3)
 
-
-
-
 #Confirm adding expense button
 confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), categoryEntry.get(), importanceOption.get()) )
 confirmExpenseButton.grid(row=5, column=0, columnspan=3)
+
+
 
 
 
@@ -485,6 +476,7 @@ def showIncomeFrame():
 def showExpenseFrame():
     mainFrame.pack_forget()
     expenseFrame.pack()
+
 
 def buttonval():
     #validates adding income
