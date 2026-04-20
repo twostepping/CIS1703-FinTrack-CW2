@@ -401,16 +401,16 @@ for item in data:
 mainFrame = tk.Frame(root)
 
 # all available options
-addIncomeButton = tk.Button(mainFrame, text="Add Income", font=("Arial", 12), command = lambda:showIncomeFrame())
-addExpenseButton = tk.Button(mainFrame, text="Add Expense", font=("Arial", 12), command = lambda:showExpenseFrame())
-addRecurringBill = tk.Button(mainFrame, text="Add Bill", font=("Arial", 12), command = lambda:showBillFrame())
-reportButton = tk.Button(mainFrame, text="Generate Report", font=("Arial", 12))
+addIncomeButton = tk.Button(mainFrame, text="Add Income",height=2,width=15, font=("Arial", 12), command = lambda:showIncomeFrame())
+addExpenseButton = tk.Button(mainFrame, text="Add Expense", height=2, width=15, font=("Arial", 12), command = lambda:showExpenseFrame())
+addRecurringBill = tk.Button(mainFrame, text="Add Bill", height=2, width=15, font=("Arial", 12), command = lambda:showBillFrame())
+reportButton = tk.Button(mainFrame, text="Generate Report", height=2, width=15, font=("Arial", 12))
 
 # put everything on grid
 addIncomeButton.grid(row=0, column=0)
 addExpenseButton.grid(row=0, column=1)
-addRecurringBill.grid(row=0, column=2)
-reportButton.grid(row=1, column=0)
+addRecurringBill.grid(row=1, column=0)
+reportButton.grid(row=1, column=1)
 
 
 
