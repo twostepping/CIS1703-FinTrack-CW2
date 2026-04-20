@@ -14,7 +14,9 @@
 # smart forecasting: a function to project the user's balance for next 30 days based on current balance and recurringBill
 # budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
 # reporting: generate a summary showing needs vs wants for the user
-
+#==============================================================================================
+#Importing all necessary modules, including json for file handling, os for clearing the console, datetime for handling dates, and tkinter for the GUI.
+#==============================================================================================
 import json
 import os
 from datetime import datetime, timedelta
@@ -23,7 +25,9 @@ from tkinter import messagebox
 
 FILE = "data.json"
 
-
+#==============================================================================================
+#Utility functions for the CLI version of the application, including functions to clear the console, display headers, pause for user input, and manage screen transitions.
+#==============================================================================================
 
 # FOR CLI  
 def clear():
@@ -43,8 +47,9 @@ def screen(title):
     clear()
     header(title)
 
-
-# Classes
+#==============================================================================================
+#Class definitions
+#==============================================================================================
 class Transaction():
     def __init__(self, id, date, amount, desc):
         self.__id = id
@@ -120,8 +125,10 @@ class RecurringBill(Transaction):
         return f"[BILL]    {super().display()} | {self.__frequency}"
 
 
+#==============================================================================================
+# File handling and validation functions. These functions manage loading and saving data to a JSON file, as well as validating user input for dates, amounts, and text fields.
+#==============================================================================================
 
-# File
 def load_data():
     if not os.path.exists(FILE):
         return []
@@ -170,8 +177,9 @@ def valid_text(text):
 def new_id(data):
     return len(data) + 1
 
-
-# System
+#==============================================================================================
+# System functions: these functions implement the core functionality of the application, including adding income, expenses, and bills, viewing transactions, forecasting, and generating reports.
+#==============================================================================================
 data = load_data()
 
 
