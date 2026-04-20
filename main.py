@@ -161,6 +161,11 @@ def valid_amount(amount):
     except ValueError:
         return False
     
+def valid_text(text):
+    if len(text.strip()) == 0:
+        return False
+    return True
+    
 
 def new_id(data):
     return len(data) + 1
@@ -417,8 +422,10 @@ incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
 incomeDescriptionLabel = tk.Label(incomeFrame, text="Description: ", font=("Arial", 12))
 incomeDescriptionEntry = tk.Entry(incomeFrame, font=("Arial", 12))
 
+incomeWarningLabel = tk.Label(incomeFrame, text="", font=("Arial", 12))
+
 # taxable radiobuttons
-taxableOption = tk.IntVar()
+taxableOption = tk.StringVar()
 taxableLabel = tk.Label (incomeFrame, text="Taxable: ", font=("Arial", 12))
 taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value="taxable", variable=taxableOption)
 taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value="not taxable", variable=taxableOption)
@@ -436,13 +443,15 @@ taxableLabel.grid(row=4, column=0)
 taxableRadio0.grid(row=4, column=1)
 taxableRadio1.grid(row=4, column=2)
 
+incomeWarningLabel.grid(row=5, column=0, columnspan=3)
+
 #Confirm adding income button
 confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
-confirmIncomeButton.grid(row=5, column=0, columnspan=5)
+confirmIncomeButton.grid(row=6, column=0, columnspan=5)
 
 # exit button 
 exitIncomeButton = tk.Button(incomeFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitIncomeButton.grid(row=6, column=0, columnspan=5)
+exitIncomeButton.grid(row=7, column=0, columnspan=5)
 
 
 
@@ -462,8 +471,10 @@ expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
 expenseDescriptionLabel = tk.Label(expenseFrame, text="Description: ", font=('Arial', 12))
 expenseDescriptionEntry = tk.Entry(expenseFrame, font=("Arial", 12))
 
+expenseWarningLabel = tk.Label(expenseFrame, text="", font=("Arial", 12))
+
 # importances radio buttons
-importanceOption = tk.StringVar(value="Need")
+importanceOption = tk.StringVar(value="need")
 importanceLabel = tk.Label(expenseFrame, text="Importance: ", font=("Arial", 12))
 importanceRadio0 = tk.Radiobutton(expenseFrame, text="Need", font=("Arial", 12), value='need', variable=importanceOption)
 importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12), value='want', variable=importanceOption)
@@ -481,13 +492,15 @@ importanceLabel.grid(row=4, column=0)
 importanceRadio0.grid(row=4, column=1)
 importanceRadio1.grid(row=4, column=2)
 
+expenseWarningLabel.grid(row=5, column=0, columnspan=3)
+
 #Confirm adding expense button
 confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), categoryEntry.get(), importanceOption.get()) )
-confirmExpenseButton.grid(row=5, column=0, columnspan=3)
+confirmExpenseButton.grid(row=6, column=0, columnspan=3)
 
 #exit button
 exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitExpenseButton.grid(row=6, column=0, columnspan=3)
+exitExpenseButton.grid(row=7, column=0, columnspan=3)
 
 
 
@@ -559,16 +572,21 @@ def showBillFrame():
 def buttonval():
     #validates adding income
     if incomeFrame.winfo_ismapped():
-        if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()):
+        if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()) and valid_text(incomeSourceEntry.get()):
             confirmIncomeButton.config(state='active')
+            incomeWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
         else:
-           confirmIncomeButton.config(state='disabled')
+            confirmIncomeButton.config(state='disabled')
+            incomeWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+
     #validates adding expenses
     elif expenseFrame.winfo_ismapped():
-        if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()):
+        if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()) and valid_text(categoryEntry.get()):
             confirmExpenseButton.config(state='active')
+            expenseWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
         else:
             confirmExpenseButton.config(state='disabled')
+            expenseWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
   
     root.after(10, buttonval)
 
