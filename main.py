@@ -190,6 +190,12 @@ def add_income(date, amt, desc, src, taxable):
 
     obj = Income(new_id(data), date, round(float(amt), 2), desc, src, taxable)
 
+    incomeEntry.delete(0, tk.END)
+    incomeSourceEntry.delete(0, tk.END)
+    incomeDateEntry.delete(0, tk.END)
+    incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    incomeDescriptionEntry.delete(0, tk.END)
+
     data.append({
         "type": "income",
         "id": obj.getID(),
@@ -216,6 +222,14 @@ def add_expense(date, amt, desc, cat, imp):
             '''
 
     obj = Expense(new_id(data), date, round(float(amt), 2), desc, cat, imp)
+    
+    
+    expenseEntry.delete(0, tk.END)
+    expenseCategoryEntry.delete(0, tk.END)
+    expenseDateEntry.delete(0, tk.END)
+    expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    expenseDescriptionEntry.delete(0, tk.END)
+    
 
     data.append({
         "type": "expense",
@@ -513,8 +527,8 @@ expenseFrame = tk.Frame()
 # expense amount/cateogry/date/description
 expenseEntryLabel = tk.Label(expenseFrame, text="Expense cost: ", font=("Arial", 12))
 expenseEntry = tk.Entry(expenseFrame, font=("Arial", 12))
-categoryLabel = tk.Label(expenseFrame, text="Category:", font=("Arial", 12))
-categoryEntry = tk.Entry(expenseFrame, font=("Arial", 12))
+expenseCategoryLabel = tk.Label(expenseFrame, text="Category:", font=("Arial", 12))
+expenseCategoryEntry = tk.Entry(expenseFrame, font=("Arial", 12))
 expenseDateLabel = tk.Label(expenseFrame, text=f"Date: ", font=('Arial', 12))
 expenseDateEntry = tk.Entry(expenseFrame, font=("Arial", 12))
 expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
@@ -532,8 +546,8 @@ importanceRadio1 = tk.Radiobutton(expenseFrame, text="Want", font=("Arial", 12),
 # put evetrything on the grid
 expenseEntryLabel.grid(row=0, column=0)
 expenseEntry.grid(row=0, column=1)
-categoryLabel.grid(row=1, column=0)
-categoryEntry.grid(row=1, column=1)
+expenseCategoryLabel.grid(row=1, column=0)
+expenseCategoryEntry.grid(row=1, column=1)
 expenseDateLabel.grid(row=2, column=0)
 expenseDateEntry.grid(row=2, column=1)
 expenseDescriptionLabel.grid(row=3, column=0)
@@ -545,7 +559,7 @@ importanceRadio1.grid(row=4, column=2)
 expenseWarningLabel.grid(row=5, column=0, columnspan=3)
 
 #Confirm adding expense button
-confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), categoryEntry.get(), importanceOption.get()) )
+confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()) )
 confirmExpenseButton.grid(row=6, column=0, columnspan=3)
 
 #exit button
@@ -716,7 +730,7 @@ def buttonval():
 
     #validates adding expenses
     elif expenseFrame.winfo_ismapped():
-        if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()) and valid_text(categoryEntry.get()):
+        if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()) and valid_text(expenseCategoryEntry.get()):
             confirmExpenseButton.config(state='active')
             expenseWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
         else:
