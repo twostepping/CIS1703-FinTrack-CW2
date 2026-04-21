@@ -14,6 +14,7 @@
 # smart forecasting: a function to project the user's balance for next 30 days based on current balance and recurringBill
 # budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
 # reporting: generate a summary showing needs vs wants for the user
+
 #==============================================================================================
 #Importing all necessary modules, including json for file handling, os for clearing the console, datetime for handling dates, and tkinter for the GUI.
 #==============================================================================================
@@ -168,10 +169,17 @@ def valid_amount(amount):
     except ValueError:
         return False
     
-def valid_text(text):
+def valid_text(text): # used for bill desc, income/exp source
     if len(text.strip()) == 0:
         return False
     return True
+
+def valid_num(num): # used for frequency
+    try:
+        int(num) # generates valueerror if num is not an integer or if it is blank
+        return True
+    except ValueError: #
+        return False
     
 
 def new_id(data):
@@ -244,7 +252,7 @@ def add_bill(date, amt, desc, freq):
         "frequency": obj.getFrequency()
     })
     
-    transactionListbox.insert("end", f"bill - {obj.getDate()} - £{obj.getAmount()} from {obj.getDesc()} days - {obj.getFrequency()}")
+    transactionListbox.insert("end", f"bill - {obj.getDate()} - £{obj.getAmount()} from {obj.getDesc()} - every {obj.getFrequency()} days")
     
     save_data(data)
 
@@ -396,6 +404,8 @@ for item in data:
         transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['source']} - {item['desc']} - {item['taxable']}")
     elif item['type'] == "expense":
         transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['category']} - {item['desc']} - {item['importance']}")
+    elif item['type'] == "bill":
+        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['desc']} - every {item['frequency']} days")
 
 # mainFrame - CONTAINS ALL MAIN MENU BUTTONS
 mainFrame = tk.Frame(root)
@@ -433,7 +443,7 @@ incomeDescriptionEntry = tk.Entry(incomeFrame, font=("Arial", 12))
 incomeWarningLabel = tk.Label(incomeFrame, text="", font=("Arial", 12))
 
 # taxable radiobuttons
-taxableOption = tk.StringVar()
+taxableOption = tk.StringVar(value="taxable")
 taxableLabel = tk.Label (incomeFrame, text="Taxable: ", font=("Arial", 12))
 taxableRadio0 = tk.Radiobutton(incomeFrame, text="Yes", font=("Arial", 12), value="taxable", variable=taxableOption)
 taxableRadio1 = tk.Radiobutton(incomeFrame, text="No", font=("Arial", 12), value="not taxable", variable=taxableOption)
@@ -530,9 +540,12 @@ billFrequencyEntry = tk.Entry(billFrame, font=("Arial", 12))
 billDueDateButton = tk.Button(billFrame, text="Calculate Due Date ", font=("Arial", 12), command=lambda: calculateDueDate())
 billDueDateLabel = tk.Label(billFrame, font=("Arial", 12))
 
+billWarningLabel = tk.Label(billFrame, text="", font=("Arial", 12))
+
 # calculate due date
 def calculateDueDate():
-    billDueDateLabel.config(text=f"{(datetime.strptime(billDateEntry.get(), "%d/%m/%Y") + timedelta(days=int(billFrequencyEntry.get()))).strftime("%d/%m/%Y")}")
+    if len(billFrequencyEntry.get().strip()) != 0:
+        billDueDateLabel.config(text=f"{(datetime.strptime(billDateEntry.get(), "%d/%m/%Y") + timedelta(days=int(billFrequencyEntry.get()))).strftime("%d/%m/%Y")}")
 
 #put everything on the grid
 billAmountLabel.grid(row=0, column=0)
@@ -546,13 +559,15 @@ billFrequencyEntry.grid(row=3, column=1)
 billDueDateButton.grid(row=4, column=0)
 billDueDateLabel.grid(row=4, column=1)
 
+billWarningLabel.grid(row=5, column=0, columnspan=3)
+
 #confirm adding bill button
 confirmBillButton = tk.Button(billFrame, text="Add Recurring Bill", font=("Arial", 12), command=lambda:add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
-confirmBillButton.grid(row=5, column=0, columnspan=3)
+confirmBillButton.grid(row=6, column=0, columnspan=3)
 
 #exit button
 exitBillButton = tk.Button(billFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitBillButton.grid(row=6, column=0, columnspan=2)
+exitBillButton.grid(row=7, column=0, columnspan=2)
 
 
 
@@ -595,6 +610,14 @@ def buttonval():
         else:
             confirmExpenseButton.config(state='disabled')
             expenseWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+            
+    elif billFrame.winfo_ismapped():
+        if valid_date(billDateEntry.get()) and valid_amount(billAmountEntry.get()) and valid_num(billFrequencyEntry.get()) and valid_text(billDescriptionEntry.get()):
+            confirmBillButton.config(state='active')
+            billWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+        else:
+            confirmBillButton.config(state='disabled')
+            billWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
   
     root.after(10, buttonval)
 
