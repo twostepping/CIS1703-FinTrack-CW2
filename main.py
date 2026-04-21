@@ -178,7 +178,7 @@ def valid_num(num): # used for frequency
     try:
         int(num) # generates valueerror if num is not an integer or if it is blank
         return True
-    except ValueError: #
+    except ValueError:
         return False
     
 
@@ -293,7 +293,7 @@ def view_all():
     else:
         for x in data:
             if x["type"] == "income":
-                obj = Income(x["id"], x["date"], x["amount"], x["desc"], x["source"])
+                obj = Income(x["id"], x["date"], x["amount"], x["desc"], x["source"], x["taxable"])
             elif x["type"] == "expense":
                 obj = Expense(x["id"], x["date"], x["amount"], x["desc"], x["category"], x["importance"])
             else:
@@ -414,7 +414,7 @@ mainFrame = tk.Frame(root)
 addIncomeButton = tk.Button(mainFrame, text="Add Income",height=2,width=15, font=("Arial", 12), command = lambda:showIncomeFrame())
 addExpenseButton = tk.Button(mainFrame, text="Add Expense", height=2, width=15, font=("Arial", 12), command = lambda:showExpenseFrame())
 addRecurringBill = tk.Button(mainFrame, text="Add Bill", height=2, width=15, font=("Arial", 12), command = lambda:showBillFrame())
-reportButton = tk.Button(mainFrame, text="Generate Report", height=2, width=15, font=("Arial", 12))
+reportButton = tk.Button(mainFrame, text="Generate Report", height=2, width=15, font=("Arial", 12), command=lambda:showReportFrame())
 
 # put everything on grid
 addIncomeButton.grid(row=0, column=0)
@@ -572,12 +572,39 @@ exitBillButton.grid(row=7, column=0, columnspan=2)
 
 
 
+
+# reportFrame - lets you do smart forecasting, generate reports, budget alerts
+reportFrame = tk.Frame(root)
+
+# generate report, smart forecasting, budget alerts
+generateReportButton = tk.Button(reportFrame, text="Generate Report", font=("Arial", 12))
+smartForecastingButton = tk.Button(reportFrame, text="Smart forecast", font=("Arial", 12))
+showBudgetAlertButton = tk.Button(reportFrame, text="Show Budget Alerts", font=("Arial", 12))
+
+reportLabel = tk.Label(reportFrame, text="", font=("Arial", 12))
+
+# put everything on grid
+generateReportButton.grid(row=0, column=0)
+smartForecastingButton.grid(row=0, column=1)
+showBudgetAlertButton.grid(row=0, column=2)
+
+reportLabel.grid(row=1, column=0, columnspan=3)
+
+#exit button
+exitReportButton = tk.Button(reportFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitReportButton.grid(row=2, column=0, columnspan=3)
+
+
+
+
+
  # all functions to switch menus
  # could probably be combined into a single function, if we take the current frame as a parameter
 def showMainFrame():
     incomeFrame.pack_forget()
     expenseFrame.pack_forget()
     billFrame.pack_forget()
+    reportFrame.pack_forget()
     mainFrame.pack()
 
 def showIncomeFrame():
@@ -591,6 +618,10 @@ def showExpenseFrame():
 def showBillFrame():
     mainFrame.pack_forget()
     billFrame.pack()
+    
+def showReportFrame():
+    mainFrame.pack_forget()
+    reportFrame.pack()
 
 def buttonval():
     #validates adding income
