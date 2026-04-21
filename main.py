@@ -124,7 +124,10 @@ class RecurringBill(Transaction):
 
     def display(self):
         return f"[BILL]    {super().display()} | {self.__frequency}"
-
+    
+class Budget(Transaction):
+    def __init__(self, id, date, amount, desc):
+        super().__init__(id, date, amount, desc)
 
 #==============================================================================================
 # File handling and validation functions. These functions manage loading and saving data to a JSON file, as well as validating user input for dates, amounts, and text fields.
@@ -212,8 +215,6 @@ def add_income(date, amt, desc, src, taxable):
 
 
 
-
-
 def add_expense(date, amt, desc, cat, imp):
 
     '''
@@ -239,6 +240,8 @@ def add_expense(date, amt, desc, cat, imp):
 
     save_data(data)
 
+
+
 def add_bill(date, amt, desc, freq):
     
     obj = RecurringBill(new_id(data), date, round(float(amt), 2), desc, freq)
@@ -253,6 +256,21 @@ def add_bill(date, amt, desc, freq):
     })
     
     transactionListbox.insert("end", f"bill - {obj.getDate()} - £{obj.getAmount()} from {obj.getDesc()} - every {obj.getFrequency()} days")
+    
+    save_data(data)
+    
+    
+    
+def add_budget(date, amt, cat):
+    obj = Budget(new_id(data), date, round(float(amt), 2), desc=cat) # using desc as category, we can visually differentiate for the user
+    
+    data.append({
+        "type": "budget",
+        "id": obj.getID(),
+        "date": obj.getDate(),
+        "amount": obj.getAmount(),
+        "desc": obj.getDesc()
+    })
     
     save_data(data)
 
@@ -390,13 +408,15 @@ transactionScrollbarY = tk.Scrollbar(transactionFrame, command=transactionListbo
 transactionScrollbarY.pack(side="right", fill="y")
 
 # add all existing data to the listbox
-for item in data:
-    if item['type'] == "income":
-        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['source']} - {item['desc']} - {item['taxable']}")
-    elif item['type'] == "expense":
-        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['category']} - {item['desc']} - {item['importance']}")
-    elif item['type'] == "bill":
-        transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['desc']} - every {item['frequency']} days")
+def loadListbox():
+    for item in data:
+        if item['type'] == "income":
+            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['source']} - {item['desc']} - {item['taxable']}")
+        elif item['type'] == "expense":
+            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['category']} - {item['desc']} - {item['importance']}")
+        elif item['type'] == "bill":
+            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['desc']} - every {item['frequency']} days")
+loadListbox()
 
 # mainFrame - CONTAINS ALL MAIN MENU BUTTONS
 mainFrame = tk.Frame(root)
@@ -405,13 +425,16 @@ mainFrame = tk.Frame(root)
 addIncomeButton = tk.Button(mainFrame, text="Add Income",height=2,width=15, font=("Arial", 12), command = lambda:showIncomeFrame())
 addExpenseButton = tk.Button(mainFrame, text="Add Expense", height=2, width=15, font=("Arial", 12), command = lambda:showExpenseFrame())
 addRecurringBill = tk.Button(mainFrame, text="Add Bill", height=2, width=15, font=("Arial", 12), command = lambda:showBillFrame())
+budgettingButton = tk.Button(mainFrame, text="Budgetting", height=2, width=15, font=("Arial", 12), command=lambda:showBudgetFrame())
 reportButton = tk.Button(mainFrame, text="Generate Report", height=2, width=15, font=("Arial", 12), command=lambda:showReportFrame())
+
 
 # put everything on grid
 addIncomeButton.grid(row=0, column=0)
 addExpenseButton.grid(row=0, column=1)
 addRecurringBill.grid(row=1, column=0)
-reportButton.grid(row=1, column=1)
+budgettingButton.grid(row=1, column=1)
+reportButton.grid(row=2, column=0, columnspan=2)
 
 
 
@@ -564,6 +587,40 @@ exitBillButton.grid(row=7, column=0, columnspan=2)
 
 
 
+#budgetFrame - lets you set a budget
+budgetFrame = tk.Frame(root)
+
+# add budget amount, category, etc
+budgetAmountLabel = tk.Label(budgetFrame, text="Amount: ", font=("Arial, 12"))
+budgetAmountEntry = tk.Entry(budgetFrame, font=("Arial", 12))
+budgetCategoryLabel = tk.Label(budgetFrame, text="Category:", font=("Arial", 12))
+budgetCategoryEntry = tk.Entry(budgetFrame, font=("Arial", 12))
+budgetDateLabel = tk.Label(budgetFrame, text=f"Date: ", font=("Arial", 12))
+budgetDateEntry = tk.Entry(budgetFrame, font=("Arial", 12))
+budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+
+budgetWarningLabel = tk.Label(budgetFrame, text="", font=("Arial", 12))
+
+#put everything on the grid
+budgetAmountLabel.grid(row=0, column=0)
+budgetAmountEntry.grid(row=0, column=1)
+budgetCategoryLabel.grid(row=1, column=0)
+budgetCategoryEntry.grid(row=1, column=1)
+budgetDateLabel.grid(row=2, column=0)
+budgetDateEntry.grid(row=2, column=1)
+
+budgetWarningLabel.grid(row=4, column=0, columnspan=2)
+
+# add budget
+confirmBudgetButton = tk.Button(budgetFrame, text="Add Budget", font=("Arial", 12), command=lambda:add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
+confirmBudgetButton.grid(row=5, column=0, columnspan=2)
+
+#exit button
+exitBudgetButton = tk.Button(budgetFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+exitBudgetButton.grid(row=6, column=0, columnspan=2)
+
+
+
 # reportFrame - lets you do smart forecasting, generate reports, budget alerts
 reportFrame = tk.Frame(root)
 
@@ -592,9 +649,13 @@ exitReportButton.grid(row=2, column=0, columnspan=3)
  # all functions to switch menus
  # could probably be combined into a single function, if we take the current frame as a parameter
 def showMainFrame():
+    transactionListbox.delete(0, tk.END)
+    loadListbox()
+    
     incomeFrame.pack_forget()
     expenseFrame.pack_forget()
     billFrame.pack_forget()
+    budgetFrame.pack_forget()
     reportFrame.pack_forget()
     mainFrame.pack()
 
@@ -613,6 +674,17 @@ def showBillFrame():
 def showReportFrame():
     mainFrame.pack_forget()
     reportFrame.pack()
+    
+def showBudgetFrame(): # reusing transactionListbox to show budgets
+    mainFrame.pack_forget()
+    budgetFrame.pack()
+    
+    transactionListbox.delete(0, tk.END)
+    for x in data:
+        if x['type'] == "budget":
+            transactionListbox.insert("end", f"{x['type']} - {x['date']} - {x['amount']} from {x['desc']}")
+    
+    
 
 def buttonval():
     #validates adding income
@@ -640,6 +712,14 @@ def buttonval():
         else:
             confirmBillButton.config(state='disabled')
             billWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+    
+    elif budgetFrame.winfo_ismapped():
+        if valid_date(budgetDateEntry.get()) and valid_amount(budgetAmountEntry.get()) and valid_text(budgetCategoryEntry.get()):
+            confirmBudgetButton.config(state='active')
+            budgetWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+        else:
+            confirmBudgetButton.config(state='disabled')
+            budgetWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
   
     root.after(10, buttonval)
 
