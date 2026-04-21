@@ -108,19 +108,10 @@ class RecurringBill(Transaction):
     def __init__(self, id, date, amount, desc, frequency, nextDueDate = None):
         super().__init__(id, date, amount, desc)
         self.__frequency = frequency
-        self.__nextDueDate = nextDueDate
 
     # GETTERS 
     def getFrequency(self):
         return self.__frequency
-    def getDueDate(self):
-        return self.__nextDueDate
-    
-    def updateDueDate(self, date=None):
-        if date != None:
-            self.__nextDueDate = date
-        else:
-            self.__nextDueDate = self.__nextDueDate + timedelta(days=self.__frequency)
 
     def display(self):
         return f"[BILL]    {super().display()} | {self.__frequency}"
@@ -347,8 +338,35 @@ def generateReport():
     reportLabel.config(text=f"Needs: £{needs}\n Wants: £{wants}")
     
 
-
-
+def budgetReport():
+    totals = [[], [], []] # category - budget - amount spent
+    index = -1
+    budgetMsg = ""
+    
+    for budget in data: # this definitely could be simplifed, but it works
+        if budget['type'] == "budget": # find each budget
+            totals[0].append(budget['desc']) # add an entry for that budget
+            totals[1].append(budget['amount'])
+            totals[2].append(0)
+            index += 1 # update index to select current budget
+            for item in data:
+                if item['type'] == 'expense': # find expense with the correct category
+                    if item['category'] == budget['desc']:
+                        (totals[2])[index] += int(item['amount'])
+                        
+    for i in range (len(totals[0])):
+        amount = totals[2][i] - totals[1][i] # amount - budget > 0 means over budget (400 spent - 200 budget = -200 (200 overbudget))
+        
+        if i > 0: # putting \n at the start of each msg also works, but the entire msg is started on a new line
+            budgetMsg = budgetMsg + "\n"
+        
+        if amount > 0:
+            budgetMsg = budgetMsg + f"{totals[0][i]} - £{amount} over budget"
+        else:
+            budgetMsg = budgetMsg + f"{totals[0][i]} - £{-amount} under budget"
+            
+    reportLabel.config(text=budgetMsg)
+    
 '''
 # Menu
 while True:
@@ -627,7 +645,7 @@ reportFrame = tk.Frame(root)
 # generate report, smart forecasting, budget alerts
 generateReportButton = tk.Button(reportFrame, text="Generate Report", font=("Arial", 12), command=lambda:generateReport())
 smartForecastingButton = tk.Button(reportFrame, text="Smart forecast", font=("Arial", 12), command=lambda:generateForecast())
-showBudgetAlertButton = tk.Button(reportFrame, text="Show Budget Alerts", font=("Arial", 12))
+showBudgetAlertButton = tk.Button(reportFrame, text="Show Budget Alerts", font=("Arial", 12), command=lambda:budgetReport())
 
 reportLabel = tk.Label(reportFrame, text="", font=("Arial", 12))
 
