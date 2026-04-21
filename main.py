@@ -304,25 +304,18 @@ def view_all():
     pause()
 
 
-def forecast():
-    screen("Forecast")
-
+def generateForecast():
     balance = sum(
         x["amount"] if x["type"] == "income" else -x["amount"]
         for x in data if x["type"] in ["income", "expense"]
     )
 
-    bills = sum(x["amount"] for x in data if x["type"] == "bill")
+    bills = sum(x["amount"] * 30/int(x["frequency"]) for x in data if x["type"] == "bill")
 
-    print(f"Current Balance:     £{balance}")
-    print(f"30 Day Prediction:   £{balance - bills}")
-
-    pause()
+    reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}")
 
 
-def report():
-    screen("Spending Report")
-
+def generateReport():
     needs = sum(
         x["amount"] for x in data
         if str(x.get("importance", "")).lower() == "need"
@@ -332,11 +325,9 @@ def report():
         x["amount"] for x in data
         if str(x.get("importance", "")).lower() == "want"
     )
-
-    print(f"Needs: £{needs}  " + "*" * int(needs / 10))
-    print(f"Wants: £{wants}  " + "*" * int(wants / 10))
-
-    pause()
+    
+    reportLabel.config(text=f"Needs: £{needs}\n Wants: £{wants}")
+    
 
 
 
@@ -577,8 +568,8 @@ exitBillButton.grid(row=7, column=0, columnspan=2)
 reportFrame = tk.Frame(root)
 
 # generate report, smart forecasting, budget alerts
-generateReportButton = tk.Button(reportFrame, text="Generate Report", font=("Arial", 12))
-smartForecastingButton = tk.Button(reportFrame, text="Smart forecast", font=("Arial", 12))
+generateReportButton = tk.Button(reportFrame, text="Generate Report", font=("Arial", 12), command=lambda:generateReport())
+smartForecastingButton = tk.Button(reportFrame, text="Smart forecast", font=("Arial", 12), command=lambda:generateForecast())
 showBudgetAlertButton = tk.Button(reportFrame, text="Show Budget Alerts", font=("Arial", 12))
 
 reportLabel = tk.Label(reportFrame, text="", font=("Arial", 12))
