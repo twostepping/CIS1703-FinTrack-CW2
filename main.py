@@ -251,6 +251,12 @@ def add_bill(date, amt, desc, freq):
     
     obj = RecurringBill(new_id(data), date, round(float(amt), 2), desc, freq)
     
+    billAmountEntry.delete(0, tk.END)
+    billDescriptionEntry.delete(0, tk.END)
+    billDateEntry.delete(0, tk.END)
+    billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    
+    
     data.append({
         "type": "bill",
         "id": obj.getID(),
@@ -269,6 +275,11 @@ def add_bill(date, amt, desc, freq):
 def add_budget(date, amt, cat):
     obj = Budget(new_id(data), date, round(float(amt), 2), desc=cat) # using desc as category, we can visually differentiate for the user
     
+    budgetAmountEntry.delete(0, tk.END)
+    budgetCategoryEntry.delete(0, tk.END)
+    budgetDateEntry.delete(0, tk.END)
+    budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    
     data.append({
         "type": "budget",
         "id": obj.getID(),
@@ -276,6 +287,8 @@ def add_budget(date, amt, cat):
         "amount": obj.getAmount(),
         "desc": obj.getDesc()
     })
+    
+    transactionListbox.insert("end", f"budget - {obj.getDate()} - £{obj.getAmount()} for {obj.getDesc()}")
     
     save_data(data)
 
@@ -328,12 +341,13 @@ def view_all():
 
 
 def generateForecast():
+    bills = 0
     balance = sum(
         x["amount"] if x["type"] == "income" else -x["amount"]
         for x in data if x["type"] in ["income", "expense"]
     )
 
-    bills = sum(x["amount"] * 30/int(x["frequency"]) for x in data if x["type"] == "bill")
+    bills = sum(x["amount"] * int(30//int(x["frequency"])) for x in data if x["type"] == "bill")
 
     reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}")
 
@@ -374,10 +388,12 @@ def budgetReport():
         if i > 0: # putting \n at the start of each msg also works, but the entire msg is started on a new line
             budgetMsg = budgetMsg + "\n"
         
-        if amount > 0:
+        if amount == 0:
+            budgetMsg = budgetMsg + f"{totals[0][i]} - £{amount} remaining"
+        elif amount > 0:
             budgetMsg = budgetMsg + f"{totals[0][i]} - £{amount} over budget"
         else:
-            budgetMsg = budgetMsg + f"{totals[0][i]} - £{-amount} under budget"
+            budgetMsg = budgetMsg + f"{totals[0][i]} - £{-amount} remaining"
             
     reportLabel.config(text=budgetMsg)
     
@@ -714,7 +730,7 @@ def showBudgetFrame(): # reusing transactionListbox to show budgets
     transactionListbox.delete(0, tk.END)
     for x in data:
         if x['type'] == "budget":
-            transactionListbox.insert("end", f"{x['type']} - {x['date']} - {x['amount']} from {x['desc']}")
+            transactionListbox.insert("end", f"{x['type']} - {x['date']} - {x['amount']} for {x['desc']}")
     
     
 
