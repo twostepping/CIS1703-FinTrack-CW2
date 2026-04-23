@@ -165,6 +165,7 @@ def add_income(date, amt, desc, src, taxable):
     incomeDateEntry.delete(0, tk.END)
     incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
     incomeDescriptionEntry.delete(0, tk.END)
+    
 
     data.append({
         "type": "income",
@@ -183,6 +184,7 @@ def add_income(date, amt, desc, src, taxable):
 
 
 def add_expense(date, amt, desc, cat, imp):
+    total = 0
 
     obj = Expense(new_id(data), date, round(float(amt), 2), desc, cat, imp)
     
@@ -193,7 +195,17 @@ def add_expense(date, amt, desc, cat, imp):
     expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
     expenseDescriptionEntry.delete(0, tk.END)
     
-
+    # budget alert
+    for budget in data: # finds the correct budget
+        if budget['type'] == "budget" and budget["desc"] == cat:
+            for item in data: # sums all expenses for that budget
+                if item["type"] == "expense" and item["category"] == cat:
+                    total += item["amount"]
+            
+            if total + float(amt) > budget["amount"]: # if over budget, alert the user
+                if tk.messagebox.askyesno("Budget Alert", f"Adding this expense will put you {(total+float(amt)-budget["amount"])} over your budget for {cat}. \nDo you still want to add this expense?") == False:
+                    return False
+    
     data.append({
         "type": "expense",
         "id": obj.getID(),
@@ -252,6 +264,7 @@ def add_budget(date, amt, cat):
     })
     
     transactionListbox.insert("end", f"budget - {obj.getDate()} - £{obj.getAmount()} for {obj.getDesc()}")
+    updateBudgetProgress()
     
     save_data(data)
 
@@ -548,11 +561,50 @@ budgetWarningLabel.grid(row=4, column=0, columnspan=2)
 
 # add budget
 confirmBudgetButton = tk.Button(budgetFrame, text="Add Budget", font=("Arial", 12), command=lambda:add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
-confirmBudgetButton.grid(row=5, column=0, columnspan=2)
+confirmBudgetButton.grid(row=6, column=0, columnspan=2)
 
 #exit button
 exitBudgetButton = tk.Button(budgetFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitBudgetButton.grid(row=6, column=0, columnspan=2)
+exitBudgetButton.grid(row=7, column=0, columnspan=2)
+
+
+# budget progress frame, gets shown below the notice label
+budgetProgressFrame = tk.Frame(budgetFrame)
+budgetProgress1 = tk.Label(budgetProgressFrame, text="Remaining", bg="green", width=40, height=2)
+budgetProgress2 = tk.Label(budgetProgressFrame, text="Spent", bg="red", width=40, height=2)
+budgetProgress1.grid(row=0, column=0)
+budgetProgress2.grid(row=0, column=1)
+
+budgetProgressFrame.grid(row=5, column=0, columnspan=2)
+
+# updates a progress bar showing amount remaining vs spent
+def updateBudgetProgress():
+    totalBudget = 0
+    totalSpent = 0
+    
+    for budget in data:
+        if budget["type"] == "budget": # find all budgets, sum the total
+            totalBudget += budget["amount"]
+            for expense in data: # find all expensives for these budgets, sum the total
+                if expense["type"] == "expense" and expense["category"] == budget["desc"]:
+                    totalSpent += expense["amount"]
+    try:
+        if float(max(1-(totalSpent/totalBudget), 0)) == 0: # the progress bar will always be shown even when width=0, so we need to forget it when entire budget is spent
+            budgetProgress1.grid_forget()
+       
+        elif float(min(totalSpent/totalBudget, 1)) == 0: # same thing but for if nothing has been spent
+            budgetProgress2.grid_forget()
+       
+        else:
+            budgetProgress1.config(width=int(40*float(max(1-(totalSpent/totalBudget),0)))) # spent
+            budgetProgress2.config(width=int(40*float(min(totalSpent/totalBudget,1)))) # remaining
+
+        
+    except ZeroDivisionError: # this occurs when no budgets are set
+        budgetProgress1.config(width=40, text="No Budgets Set", bg="gray")
+        budgetProgress2.grid_forget()
+
+
 
 
 
@@ -612,7 +664,10 @@ def showReportFrame():
     
 def showBudgetFrame(): # reusing transactionListbox to show budgets
     mainFrame.pack_forget()
+    updateBudgetProgress()
     budgetFrame.pack()
+    budgetProgressFrame.grid(row=5, column=0, columnspan=2)
+    
     
     transactionListbox.delete(0, tk.END) # clears the listbox
     for x in data: # loops through the data to find budgets and adds them
