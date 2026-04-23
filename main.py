@@ -342,6 +342,7 @@ titleLabel.pack()
 
 
 
+
 # transactionFrame - decided to make the transaction history always visible, change if needed
 transactionFrame = tk.Frame(root)
 transactionFrame.pack()
@@ -365,6 +366,10 @@ def loadListbox():
         elif item['type'] == "bill":
             transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['desc']} - every {item['frequency']} days")
 loadListbox()
+
+
+
+
 
 # mainFrame - CONTAINS ALL MAIN MENU BUTTONS
 mainFrame = tk.Frame(root)
@@ -568,6 +573,7 @@ exitBudgetButton = tk.Button(budgetFrame, text="Exit", font=("Arial", 12), comma
 exitBudgetButton.grid(row=7, column=0, columnspan=2)
 
 
+
 # budget progress frame, gets shown below the notice label
 budgetProgressFrame = tk.Frame(budgetFrame)
 budgetProgress1 = tk.Label(budgetProgressFrame, text="Remaining", bg="green", width=40, height=2)
@@ -600,7 +606,7 @@ def updateBudgetProgress():
             budgetProgress2.config(width=int(40*float(min(totalSpent/totalBudget,1)))) # remaining
 
         
-    except ZeroDivisionError: # this occurs when no budgets are set
+    except ZeroDivisionError: # this occurs when no budgets set
         budgetProgress1.config(width=40, text="No Budgets Set", bg="gray")
         budgetProgress2.grid_forget()
 
@@ -682,16 +688,20 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()) and valid_text(incomeSourceEntry.get()):
             confirmIncomeButton.config(state='active')
             incomeWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+            root.bind("<Return>", lambda event: add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
         else:
             confirmIncomeButton.config(state='disabled')
             incomeWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+            root.unbind("<Return>")
 
     #validates adding expenses
     elif expenseFrame.winfo_ismapped():
         if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()) and valid_text(expenseCategoryEntry.get()):
             confirmExpenseButton.config(state='active')
             expenseWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+            root.bind("<Return>", lambda event: add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()))
         else:
+            root.unbind("<Return>")
             confirmExpenseButton.config(state='disabled')
             expenseWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
             
@@ -699,17 +709,21 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(billDateEntry.get()) and valid_amount(billAmountEntry.get()) and valid_num(billFrequencyEntry.get()) and valid_text(billDescriptionEntry.get()):
             confirmBillButton.config(state='active')
             billWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+            root.bind("<Return>", lambda event: add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
         else:
             confirmBillButton.config(state='disabled')
             billWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+            root.unbind("<Return>")
     
     elif budgetFrame.winfo_ismapped():
         if valid_date(budgetDateEntry.get()) and valid_amount(budgetAmountEntry.get()) and valid_text(budgetCategoryEntry.get()):
             confirmBudgetButton.config(state='active')
             budgetWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
+            root.bind("<Return>", lambda event: add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
         else:
             confirmBudgetButton.config(state='disabled')
             budgetWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
+            root.unbind("<Return>")
   
     root.after(10, buttonval)
 
