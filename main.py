@@ -270,6 +270,50 @@ def add_budget(date, amt, cat):
 
 
 
+def delete_transaction():
+    selected = transactionListbox.curselection()
+    
+    if not selected:
+        return False
+    
+    item = transactionListbox.get(selected[0]).split(" - ")
+    
+    
+    for transaction in data: # finds data exactly matching the selected item, then removes it
+        if (item[1] == transaction["date"]): # date is common to all and is not part of a large string, e.g. ("£xxx from/for xxx")
+            
+            if (item[0] == "income") and (transaction["type"] == "income"):
+                if (item[2] == f"£{transaction["amount"]} from {transaction["source"]}") and (item[3] == transaction["desc"]) and (item[4] == transaction["taxable"]):
+                    data.remove(transaction)
+                    save_data(data)
+                    break
+        
+            elif (item[0] == "expense") and (transaction["type"] == "expense"):
+                if (item[2] == f"£{transaction["amount"]} from {transaction["category"]}") and (item[3] == transaction["desc"]) and (item[4] == transaction["importance"]):
+                    data.remove(transaction)
+                    save_data(data)
+                    break
+            
+            elif (item[0] == "bill") and (transaction["type"] == "bill"):
+                if (item[2] == f"£{transaction["amount"]} from {transaction["desc"]}") and (item[3] == f"every {str(transaction["frequency"])} days"):
+                    data.remove(transaction)
+                    save_data(data)
+                    break
+            
+            elif (item[0] == "budget") and (transaction["type"] == "budget"):
+                if (item[2] == f"£{transaction["amount"]} for {transaction["desc"]}"):
+                    data.remove(transaction)
+                    save_data(data)
+                    updateBudgetProgress()
+                    break
+
+
+    transactionListbox.delete(tk.ANCHOR)
+    
+    
+
+
+
 def generateForecast():
     bills = 0
     balance = sum(
@@ -432,11 +476,14 @@ incomeWarningLabel.grid(row=5, column=0, columnspan=3)
 
 #Confirm adding income button
 confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
-confirmIncomeButton.grid(row=6, column=0, columnspan=5)
+confirmIncomeButton.grid(row=6, column=0, columnspan=3)
+# delete button
+deleteIncomeButton = tk.Button(incomeFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
+deleteIncomeButton.grid(row=7, column=0, columnspan=3)
 
 # exit button 
 exitIncomeButton = tk.Button(incomeFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitIncomeButton.grid(row=7, column=0, columnspan=5)
+exitIncomeButton.grid(row=8, column=0, columnspan=3)
 
 
 
@@ -482,10 +529,13 @@ expenseWarningLabel.grid(row=5, column=0, columnspan=3)
 #Confirm adding expense button
 confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()) )
 confirmExpenseButton.grid(row=6, column=0, columnspan=3)
+# delete button
+deleteExpenseButton = tk.Button(expenseFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
+deleteExpenseButton.grid(row=7, column=0, columnspan=3)
 
 #exit button
 exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitExpenseButton.grid(row=7, column=0, columnspan=3)
+exitExpenseButton.grid(row=8, column=0, columnspan=3)
 
 
 
@@ -526,15 +576,18 @@ billFrequencyEntry.grid(row=3, column=1)
 billDueDateButton.grid(row=4, column=0)
 billDueDateLabel.grid(row=4, column=1)
 
-billWarningLabel.grid(row=5, column=0, columnspan=3)
+billWarningLabel.grid(row=5, column=0, columnspan=2)
 
 #confirm adding bill button
 confirmBillButton = tk.Button(billFrame, text="Add Recurring Bill", font=("Arial", 12), command=lambda:add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
-confirmBillButton.grid(row=6, column=0, columnspan=3)
+confirmBillButton.grid(row=6, column=0, columnspan=2)
+# delete button
+deleteBillButton = tk.Button(billFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
+deleteBillButton.grid(row=7, column=0, columnspan=2)
 
 #exit button
 exitBillButton = tk.Button(billFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitBillButton.grid(row=7, column=0, columnspan=2)
+exitBillButton.grid(row=8, column=0, columnspan=2)
 
 
 
@@ -567,10 +620,14 @@ budgetWarningLabel.grid(row=4, column=0, columnspan=2)
 # add budget
 confirmBudgetButton = tk.Button(budgetFrame, text="Add Budget", font=("Arial", 12), command=lambda:add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
 confirmBudgetButton.grid(row=6, column=0, columnspan=2)
+# delete button
+deleteBudgetButton = tk.Button(budgetFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
+deleteBudgetButton.grid(row=7, column=0, columnspan=2)
+
 
 #exit button
 exitBudgetButton = tk.Button(budgetFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
-exitBudgetButton.grid(row=7, column=0, columnspan=2)
+exitBudgetButton.grid(row=8, column=0, columnspan=2)
 
 
 
@@ -597,16 +654,23 @@ def updateBudgetProgress():
     try:
         if float(max(1-(totalSpent/totalBudget), 0)) == 0: # the progress bar will always be shown even when width=0, so we need to forget it when entire budget is spent
             budgetProgress1.grid_forget()
+            budgetProgress2.config(text="Spent", bg="red", width=40)
+            budgetProgress2.grid(row=0, column=1)
        
         elif float(min(totalSpent/totalBudget, 1)) == 0: # same thing but for if nothing has been spent
             budgetProgress2.grid_forget()
+            budgetProgress1.config(text="Remaining", bg="green", width=40)
+            budgetProgress1.grid(row=0, column=0)
        
         else:
-            budgetProgress1.config(width=int(40*float(max(1-(totalSpent/totalBudget),0)))) # spent
-            budgetProgress2.config(width=int(40*float(min(totalSpent/totalBudget,1)))) # remaining
+            budgetProgress1.config(text="Remaining", bg="green", width=int(40*float(max(1-(totalSpent/totalBudget),0)))) # spent
+            budgetProgress2.config(text="Spent", bg="red", width=int(40*float(min(totalSpent/totalBudget,1)))) # remaining
+            budgetProgress1.grid(row=0, column=0)
+            budgetProgress2.grid(row=0, column=1)
 
         
     except ZeroDivisionError: # this occurs when no budgets set
+        budgetProgress1.grid(row=0, column=0)
         budgetProgress1.config(width=40, text="No Budgets Set", bg="gray")
         budgetProgress2.grid_forget()
 
@@ -668,7 +732,7 @@ def showReportFrame():
     mainFrame.pack_forget()
     reportFrame.pack()
     
-def showBudgetFrame(): # reusing transactionListbox to show budgets
+def showBudgetFrame(): # reusing transactionListbox to show budgets when in this frame
     mainFrame.pack_forget()
     updateBudgetProgress()
     budgetFrame.pack()
@@ -678,7 +742,7 @@ def showBudgetFrame(): # reusing transactionListbox to show budgets
     transactionListbox.delete(0, tk.END) # clears the listbox
     for x in data: # loops through the data to find budgets and adds them
         if x['type'] == "budget":
-            transactionListbox.insert("end", f"{x['type']} - {x['date']} - {x['amount']} for {x['desc']}")
+            transactionListbox.insert("end", f"{x['type']} - {x['date']} - £{x['amount']} for {x['desc']}")
     
     
 
@@ -688,11 +752,11 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()) and valid_text(incomeSourceEntry.get()):
             confirmIncomeButton.config(state='active')
             incomeWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
-            root.bind("<Return>", lambda event: add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
+            root.bind("<Return>", lambda event: add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get())) # allows user to press enter to add
         else:
             confirmIncomeButton.config(state='disabled')
             incomeWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
-            root.unbind("<Return>")
+            root.unbind("<Return>") # removes ability to press enter to add when the fields are invalid
 
     #validates adding expenses
     elif expenseFrame.winfo_ismapped():
