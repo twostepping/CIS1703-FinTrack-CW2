@@ -26,27 +26,7 @@ from tkinter import messagebox
 
 FILE = "data.json"
 
-#==============================================================================================
-#Utility functions for the CLI version of the application, including functions to clear the console, display headers, pause for user input, and manage screen transitions.
-#==============================================================================================
 
-# FOR CLI  
-def clear():
-    os.system("cls" if os.name == "nt" else "clear")
-
-def header(title="FinTrack"):
-    print("=" * 50)
-    print(title.center(50))
-    print("=" * 50)
-
-
-def pause(msg="\nPress Enter..."):
-    input(msg)
-
-
-def screen(title):
-    clear()
-    header(title)
 
 #==============================================================================================
 #Class definitions
@@ -68,9 +48,6 @@ class Transaction():
     def getDesc(self):
         return self.__desc
 
-    def display(self):
-        return f"{self.__date:<12} £{self.__amount:<8} {self.__desc}"
-
 
 class Income(Transaction):
     def __init__(self, id, date, amount, desc, source, taxable):
@@ -84,8 +61,6 @@ class Income(Transaction):
     def getTaxable(self):
         return self.__taxable
 
-    def display(self):
-        return f"[INCOME]  {super().display()} | {self.__source}"
 
 
 class Expense(Transaction):
@@ -100,8 +75,6 @@ class Expense(Transaction):
     def getImportance(self):
         return self.__importance
 
-    def display(self):
-        return f"[EXPENSE] {super().display()} | {self.__category} ({self.__importance})"
 
 
 class RecurringBill(Transaction):
@@ -113,8 +86,6 @@ class RecurringBill(Transaction):
     def getFrequency(self):
         return self.__frequency
 
-    def display(self):
-        return f"[BILL]    {super().display()} | {self.__frequency}"
     
 class Budget(Transaction):
     def __init__(self, id, date, amount, desc):
@@ -150,7 +121,6 @@ def valid_date(d):
 
 
 def valid_amount(amount):
-
     if len(amount) == 0:
         return False
 
@@ -213,13 +183,6 @@ def add_income(date, amt, desc, src, taxable):
 
 
 def add_expense(date, amt, desc, cat, imp):
-
-    '''
-    if cat == "food":
-        spent = sum(x["amount"] for x in data if x.get("category") == "food")
-        if spent + amt > 200:
-            print("\n[-] Food budget exceeded")
-            '''
 
     obj = Expense(new_id(data), date, round(float(amt), 2), desc, cat, imp)
     
@@ -292,52 +255,6 @@ def add_budget(date, amt, cat):
     
     save_data(data)
 
-'''
-def add_bill():
-    screen("Add Recurring Bill")
-
-    d = input("Date (DD/MM/YYYY): ")
-    if not valid_date(d):
-        print("Invalid date")
-        return pause()
-
-    amt = get_amount()
-    desc = input("Description: ")
-    freq = input("Frequency: ")
-
-    obj = RecurringBill(new_id(data), d, amt, desc, freq)
-
-    data.append({
-        "type": "bill",
-        "id": obj._id,
-        "date": obj._date,
-        "amount": obj._amount,
-        "desc": obj._desc,
-        "frequency": obj.frequency
-    })
-
-    save_data(data)
-    print("\n[+] Bill added")
-    pause()
-'''
-
-def view_all():
-    screen("All Transactions")
-
-    if not data:
-        print("No transactions yet")
-    else:
-        for x in data:
-            if x["type"] == "income":
-                obj = Income(x["id"], x["date"], x["amount"], x["desc"], x["source"], x["taxable"])
-            elif x["type"] == "expense":
-                obj = Expense(x["id"], x["date"], x["amount"], x["desc"], x["category"], x["importance"])
-            else:
-                obj = RecurringBill(x["id"], x["date"], x["amount"], x["desc"], x["frequency"])
-
-            print(obj.display())
-
-    pause()
 
 
 def generateForecast():
@@ -397,41 +314,11 @@ def budgetReport():
             
     reportLabel.config(text=budgetMsg)
     
-'''
-# Menu
-while True:
-    clear()
-    header()
 
-    options = [
-        "1. Add Income",
-        "2. Add Expense",
-        "3. Add Bill",
-        "4. View Transactions",
-        "5. Forecast",
-        "6. Report",
-        "7. Exit"
-    ]
 
-    for o in options:
-        print(o)
 
-    print("\n" + "=" * 50)
-    choice = input("Select option: ")
 
-    if choice == "1": add_income()
-    elif choice == "2": add_expense()
-    elif choice == "3": add_bill()
-    elif choice == "4": view_all()
-    elif choice == "5": forecast()
-    elif choice == "6": report()
-    elif choice == "7":
-        print("\nGoodbye")
-        break
-    else:
-        print("Invalid option")
-        pause()
-'''
+
 root = tk.Tk()
 root.title("FinTrack")
 root.geometry("420x480")
@@ -727,16 +614,16 @@ def showBudgetFrame(): # reusing transactionListbox to show budgets
     mainFrame.pack_forget()
     budgetFrame.pack()
     
-    transactionListbox.delete(0, tk.END)
-    for x in data:
+    transactionListbox.delete(0, tk.END) # clears the listbox
+    for x in data: # loops through the data to find budgets and adds them
         if x['type'] == "budget":
             transactionListbox.insert("end", f"{x['type']} - {x['date']} - {x['amount']} for {x['desc']}")
     
     
 
-def buttonval():
+def buttonval(): # prevents the user from adding things until all required fields have a valid entry
     #validates adding income
-    if incomeFrame.winfo_ismapped():
+    if incomeFrame.winfo_ismapped(): # checks which frame is currently being shown
         if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()) and valid_text(incomeSourceEntry.get()):
             confirmIncomeButton.config(state='active')
             incomeWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
