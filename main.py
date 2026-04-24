@@ -308,6 +308,7 @@ def add_budget(date, amt, cat):
 
 def delete_transaction(): 
     index = transactionListbox.curselection()
+    increment = 0
     if not index: # checks to make sure something is selected
         return False
     
