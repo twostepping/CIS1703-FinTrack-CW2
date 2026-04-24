@@ -148,6 +148,7 @@ class RecurringBill(Transaction):
         billDescriptionEntry.delete(0, tk.END)
         billDateEntry.delete(0, tk.END)
         billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        billFrequencyEntry.delete(0, tk.END)
     
     
         data.append({
@@ -169,11 +170,13 @@ class Budget(Transaction):
         super().__init__(id, date, amount, desc)
         
     def addBudget(self):
+        # these clear the entrys on the budget frame, so that the user doesn't have to do it themself
         budgetAmountEntry.delete(0, tk.END)
         budgetCategoryEntry.delete(0, tk.END)
         budgetDateEntry.delete(0, tk.END)
         budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
     
+        # add to the data.json
         data.append({
             "type": "budget",
             "id": self._id,
@@ -181,9 +184,10 @@ class Budget(Transaction):
             "amount":self._amount,
             "desc": self._desc
         })
-    
+
+        # add to the end of the listbox
         transactionListbox.insert("end", f"budget - {self._date} - £{self._amount} for {self._desc}")
-        updateBudgetProgress()
+        updateBudgetProgress() # update the budget progress bar
     
         save_data(data)
 
@@ -237,16 +241,16 @@ def valid_date(d):
 
 
 def valid_amount(amount):
-    if len(amount) == 0:
+    if len(amount) == 0: # check if the value exists
         return False
 
     try:
-        if float(amount) >= 1:
+        if float(amount) > 0: # can't enter negatives because there's no reason to? negative expenditure is just income and negative income is just expenditure
             return True
         else:
             return False
             
-    except ValueError:
+    except ValueError: # happens when it's not a number
         return False
     
     
@@ -258,8 +262,11 @@ def valid_text(text): # used for bill desc, income/exp source
 
 def valid_num(num): # used for frequency
     try:
-        int(num) # generates valueerror if num is not an integer or if it is blank
-        return True
+        if int(num) > 0: # generates valueerror if num is not an integer or if it is blank
+            return True
+        else: # can't have negative frequency
+            return False
+    
     except ValueError:
         return False
     
@@ -343,45 +350,46 @@ def delete_transaction():
 
 def generateForecast():
     bills = 0
-    balance = sum(
+    
+    balance = sum( # find the total balance by adding all the income and subtracting all the expenses
         x["amount"] if x["type"] == "income" else -x["amount"]
         for x in data if x["type"] in ["income", "expense"]
     )
 
-    bills = sum(x["amount"] * int(30//int(x["frequency"])) for x in data if x["type"] == "bill")
+    bills = sum(x["amount"] * int(30//int(x["frequency"])) for x in data if x["type"] == "bill") # find all the bills and multiply amount paid by how many days you'll pay in the 30 days
 
-    reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}")
+    reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}") # show the user
 
 
 def generateReport():
-    needs = sum(
+    needs = sum( # sum all the amount spent for needs
         x["amount"] for x in data
         if str(x.get("importance", "")).lower() == "need"
     )
 
-    wants = sum(
+    wants = sum( # sum all the amount spent for wants
         x["amount"] for x in data
         if str(x.get("importance", "")).lower() == "want"
     )
     
-    reportLabel.config(text=f"Needs: £{needs}\n Wants: £{wants}")
+    reportLabel.config(text=f"Needs: £{needs}\n Wants: £{wants}") # present to user
     
 
 def budgetReport():
     totals = [[], [], []] # category - budget - amount spent
-    index = -1
+    index = -1 # immediatly gets incremented to 0
     budgetMsg = ""
     
     for budget in data: # this definitely could be simplifed, but it works
         if budget['type'] == "budget": # find each budget
-            totals[0].append(budget['desc']) # add an entry for that budget
-            totals[1].append(budget['amount'])
-            totals[2].append(0)
-            index += 1 # update index to select current budget
+            totals[0].append(budget['desc'])   # create a new cell for the found budget
+            totals[1].append(budget['amount']) # create a new cell for the budgets amount
+            totals[2].append(0)                # create a new cell for the amount spent towards that budget
+            index += 1 # update index to select current budget in the totals[] data structure
             for item in data:
                 if item['type'] == 'expense': # find expense with the correct category
                     if item['category'] == budget['desc']:
-                        (totals[2])[index] += int(item['amount'])
+                        (totals[2])[index] += int(item['amount']) # add the amount spent to the total
                         
     for i in range (len(totals[0])):
         amount = totals[2][i] - totals[1][i] # amount - budget > 0 means over budget (400 spent - 200 budget = -200 (200 overbudget))
@@ -389,7 +397,7 @@ def budgetReport():
         if i > 0: # putting \n at the start of each msg also works, but the entire msg is started on a new line
             budgetMsg = budgetMsg + "\n"
         
-        if amount == 0:
+        if amount == 0: # update the presented msg
             budgetMsg = budgetMsg + f"{totals[0][i]} - £{amount} remaining"
         elif amount > 0:
             budgetMsg = budgetMsg + f"{totals[0][i]} - £{amount} over budget"
@@ -421,13 +429,14 @@ transactionFrame = tk.Frame(root)
 transactionFrame.pack()
 
 # listbox + scrollbar  
-# we need an x scroll bar, current one gets put into the wrong place
+# we need an X axis scroll bar, current one gets put into the wrong place
 transactionListbox = tk.Listbox(transactionFrame, font=("Arial", 12), width = 40) # width is measured in charcters, not pixels for some reason
 transactionListbox.pack(side="left")
 #transactionScrollbarX = tk.Scrollbar(transactionFrame, command=transactionListbox.xview, orient="horizontal")
 transactionScrollbarY = tk.Scrollbar(transactionFrame, command=transactionListbox.yview)
 #transactionScrollbarX.pack(side="bottom",fill="y")
 transactionScrollbarY.pack(side="right", fill="y")
+
 
 # add all existing data to the listbox
 def loadListbox():
@@ -588,10 +597,12 @@ billDueDateLabel = tk.Label(billFrame, font=("Arial", 12))
 
 billWarningLabel = tk.Label(billFrame, text="", font=("Arial", 12))
 
+
 # calculate due date
 def calculateDueDate():
     if len(billFrequencyEntry.get().strip()) != 0:
         billDueDateLabel.config(text=f"{(datetime.strptime(billDateEntry.get(), "%d/%m/%Y") + timedelta(days=int(billFrequencyEntry.get()))).strftime("%d/%m/%Y")}")
+
 
 #put everything on the grid
 billAmountLabel.grid(row=0, column=0)
@@ -669,6 +680,7 @@ budgetProgress2.grid(row=0, column=1)
 
 budgetProgressFrame.grid(row=5, column=0, columnspan=2)
 
+
 # updates a progress bar showing amount remaining vs spent
 def updateBudgetProgress():
     totalBudget = 0
@@ -677,27 +689,26 @@ def updateBudgetProgress():
     for budget in data:
         if budget["type"] == "budget": # find all budgets, sum the total
             totalBudget += budget["amount"]
-            for expense in data: # find all expensives for these budgets, sum the total
+            for expense in data: # find all expenses for these budgets, sum the total
                 if expense["type"] == "expense" and expense["category"] == budget["desc"]:
                     totalSpent += expense["amount"]
     try:
-        if float(max(1-(totalSpent/totalBudget), 0)) == 0: # the progress bar will always be shown even when width=0, so we need to forget it when entire budget is spent
-            budgetProgress1.grid_forget()
+        if float(max(1-(totalSpent/totalBudget), 0)) == 0: # if the totalBudget has a width of 0 - setting width = 0 doesn't make the label invisible, it has a minimum width based on the text contents
+            budgetProgress1.grid_forget() # forget the totalBudget label
             budgetProgress2.config(text="Spent", bg="red", width=40)
             budgetProgress2.grid(row=0, column=1)
        
-        elif float(min(totalSpent/totalBudget, 1)) == 0: # same thing but for if nothing has been spent
-            budgetProgress2.grid_forget()
+        elif float(min(totalSpent/totalBudget, 1)) == 0: # if the totalSpent has a width of 0
+            budgetProgress2.grid_forget() # forget the totalSpent label
             budgetProgress1.config(text="Remaining", bg="green", width=40)
             budgetProgress1.grid(row=0, column=0)
        
-        else:
-            budgetProgress1.config(text="Remaining", bg="green", width=int(40*float(max(1-(totalSpent/totalBudget),0)))) # spent
-            budgetProgress2.config(text="Spent", bg="red", width=int(40*float(min(totalSpent/totalBudget,1)))) # remaining
+        else: # for when neither has a width of 0, assign them a length according to the ratio of remaining:spent
+            budgetProgress1.config(text="Remaining", bg="green", width=int(40*float(max(1-(totalSpent/totalBudget),0)))) # remaining
+            budgetProgress2.config(text="Spent", bg="red", width=int(40*float(min(totalSpent/totalBudget,1)))) # spent
             budgetProgress1.grid(row=0, column=0)
             budgetProgress2.grid(row=0, column=1)
 
-        
     except ZeroDivisionError: # this occurs when no budgets set
         budgetProgress1.grid(row=0, column=0)
         budgetProgress1.config(width=40, text="No Budgets Set", bg="gray")
