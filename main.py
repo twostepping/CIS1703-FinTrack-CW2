@@ -31,65 +31,161 @@ FILE = "data.json"
 #==============================================================================================
 #Class definitions
 #==============================================================================================
+# don't use __, it involves name mangling which makes inheritance really annoying, _ is already private attributes by itself
+
 class Transaction():
     def __init__(self, id, date, amount, desc):
-        self.__id = id
-        self.__date = date
-        self.__amount = amount
-        self.__desc = desc
+        self._id = id
+        self._date = date
+        self._amount = amount
+        self._desc = desc
 
     # GETTERS
     def getID(self):
-        return self.__id
+        return self._id
     def getDate(self):
-        return self.__date
+        return self._date
     def getAmount(self):
-        return self.__amount
+        return self._amount
     def getDesc(self):
-        return self.__desc
+        return self._desc
 
 
 class Income(Transaction):
     def __init__(self, id, date, amount, desc, source, taxable):
         super().__init__(id, date, amount, desc)
-        self.__source = source
-        self.__taxable = taxable
+        self._source = source
+        self._taxable = taxable
 
     # GETTERS
     def getSource(self):
-        return self.__source
+        return self._source
     def getTaxable(self):
-        return self.__taxable
-
+        return self._taxable
+    
+    def addIncome(self):
+        incomeEntry.delete(0, tk.END)
+        incomeSourceEntry.delete(0, tk.END)
+        incomeDateEntry.delete(0, tk.END)
+        incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        incomeDescriptionEntry.delete(0, tk.END)
+    
+        data.append({
+            "type": "income",
+            "id": self._id,
+            "date": self._date,
+            "amount": self._amount,
+            "desc": self._desc,
+            "source": self._source,
+            "taxable": self._taxable
+        })
+        
+        
+        save_data(data)
+    
+        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}")
 
 
 class Expense(Transaction):
     def __init__(self, id, date, amount, desc, category, importance):
         super().__init__(id, date, amount, desc)
-        self.__category = category
-        self.__importance = importance
+        self._category = category
+        self._importance = importance
 
     # GETTERS
     def getCategory(self):
         return self.__category
     def getImportance(self):
         return self.__importance
+    
+    def addExpense(self):
+        total = 0
+        
+        expenseEntry.delete(0, tk.END)
+        expenseCategoryEntry.delete(0, tk.END)
+        expenseDateEntry.delete(0, tk.END)
+        expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        expenseDescriptionEntry.delete(0, tk.END)
+    
+        # budget alert
+        for budget in data: # finds the correct budget
+            if budget['type'] == "budget" and budget["desc"] == self._category:
+                for item in data: # sums all expenses for that budget
+                    if item["type"] == "expense" and item["category"] == self._category:
+                        total += item["amount"]
+            
+                if total + float(self._amount) > budget["amount"]: # if over budget, alert the user
+                    if tk.messagebox.askyesno("Budget Alert", f"Adding this expense will put you {(total+float(self._amount)-budget["amount"])} over your budget for {self._category}. \nDo you still want to add this expense?") == False:
+                        return False
+    
+        data.append({
+            "type": "expense",
+            "id": self._id,
+            "date": self._date,
+            "amount": self._amount,
+            "desc": self._desc,
+            "category": self._category,
+            "importance": self._importance
+        })
+        save_data(data)
+    
+        transactionListbox.insert("end", f"expense - {self._date} - £{self._amount} from {self._category} - {self._desc} - {self._importance}")
+
 
 
 
 class RecurringBill(Transaction):
     def __init__(self, id, date, amount, desc, frequency, nextDueDate = None):
         super().__init__(id, date, amount, desc)
-        self.__frequency = frequency
+        self._frequency = frequency
 
     # GETTERS 
     def getFrequency(self):
         return self.__frequency
+    
+    def addBill(self):
+        billAmountEntry.delete(0, tk.END)
+        billDescriptionEntry.delete(0, tk.END)
+        billDateEntry.delete(0, tk.END)
+        billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    
+    
+        data.append({
+            "type": "bill",
+            "id": self._id,
+            "date": self._date,
+            "amount": self._amount,
+            "desc": self._desc,
+            "frequency": self._frequency
+        })
+    
+        transactionListbox.insert("end", f"bill - {self._date} - £{self._amount} from {self._desc} - every {self._frequency} days")
+    
+        save_data(data)
 
     
 class Budget(Transaction):
     def __init__(self, id, date, amount, desc):
         super().__init__(id, date, amount, desc)
+        
+    def addBudget(self):
+        budgetAmountEntry.delete(0, tk.END)
+        budgetCategoryEntry.delete(0, tk.END)
+        budgetDateEntry.delete(0, tk.END)
+        budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+    
+        data.append({
+            "type": "budget",
+            "id": self._id,
+            "date": self._date,
+            "amount":self._amount,
+            "desc": self._desc
+        })
+    
+        transactionListbox.insert("end", f"budget - {self._date} - £{self._amount} for {self._desc}")
+        updateBudgetProgress()
+    
+        save_data(data)
 
 #==============================================================================================
 # File handling and validation functions. These functions manage loading and saving data to a JSON file, as well as validating user input for dates, amounts, and text fields.
@@ -107,11 +203,31 @@ def load_data():
 
 
 def save_data(data):
+    
+    # This makes sure that the item IDs are all in order, and not by sorting them
+    # IDs are created based on order of creation, and that order should never change so there's no need to sort them
+    # instead, the IDs are changed such that they are in order
+    
+    ID1 = -1 # previous ID
+    for item in data:
+        if ID1 == -1: # skips the first item since that means there is no previous item to compare against
+            ID1 = 1
+            item["id"] = 1 # makes sure first item has ID 1
+            continue # skips the rest of the code for this loop
+
+        if ID1+1 != item["id"]: # if the ID isn't 1 greater than previous ID, update it
+            item["id"] = ID1+1
+    
+        ID1 = item["id"] # update data
+    
+    # overwrites existing data with the new data
     with open(FILE, "w") as f:
         json.dump(data, f, indent=4)
 
 
-# Validation
+#==============================================================================================
+# Validations - prevents the add item buttons being pressed until all requires entrys are valid
+#==============================================================================================
 def valid_date(d):
     try:
         datetime.strptime(d, "%d/%m/%Y")
@@ -133,10 +249,12 @@ def valid_amount(amount):
     except ValueError:
         return False
     
+    
 def valid_text(text): # used for bill desc, income/exp source
     if len(text.strip()) == 0:
         return False
     return True
+
 
 def valid_num(num): # used for frequency
     try:
@@ -149,170 +267,78 @@ def valid_num(num): # used for frequency
 def new_id(data):
     return len(data) + 1
 
+
 #==============================================================================================
 # System functions: these functions implement the core functionality of the application, including adding income, expenses, and bills, viewing transactions, forecasting, and generating reports.
 #==============================================================================================
 data = load_data()
 
+# all items in the data.json are converted into objects
+for item in data:
+    if item["type"] == "income":
+        obj = Income(item["id"], item["date"], item["amount"], item["desc"], item["source"], item["taxable"])
+    elif item["type"] == "expense":
+        obj = Expense(item["id"], item["date"], item["amount"], item["desc"], item["category"], item["importance"])
+    elif item["type"] == "bill":
+        obj = RecurringBill(item["id"], item["date"], item["amount"], item["desc"], item["frequency"])
+    elif item["type"] == "budget":
+        obj = Budget(item["id"], item["date"], item["amount"], item["desc"])
 
 
 def add_income(date, amt, desc, src, taxable):
-
     obj = Income(new_id(data), date, round(float(amt), 2), desc, src, taxable)
-
-    incomeEntry.delete(0, tk.END)
-    incomeSourceEntry.delete(0, tk.END)
-    incomeDateEntry.delete(0, tk.END)
-    incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
-    incomeDescriptionEntry.delete(0, tk.END)
-    
-
-    data.append({
-        "type": "income",
-        "id": obj.getID(),
-        "date": obj.getDate(),
-        "amount": obj.getAmount(),
-        "desc": obj.getDesc(),
-        "source": obj.getSource(),
-        "taxable": obj.getTaxable()
-    })
-    
-    transactionListbox.insert("end", f"income - {obj.getDate()} - £{obj.getAmount()} from {obj.getSource()} - {obj.getDesc()} - {obj.getTaxable()}")
-
-    save_data(data)
-
+    obj.addIncome()
 
 
 def add_expense(date, amt, desc, cat, imp):
-    total = 0
-
     obj = Expense(new_id(data), date, round(float(amt), 2), desc, cat, imp)
-    
-    
-    expenseEntry.delete(0, tk.END)
-    expenseCategoryEntry.delete(0, tk.END)
-    expenseDateEntry.delete(0, tk.END)
-    expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
-    expenseDescriptionEntry.delete(0, tk.END)
-    
-    # budget alert
-    for budget in data: # finds the correct budget
-        if budget['type'] == "budget" and budget["desc"] == cat:
-            for item in data: # sums all expenses for that budget
-                if item["type"] == "expense" and item["category"] == cat:
-                    total += item["amount"]
-            
-            if total + float(amt) > budget["amount"]: # if over budget, alert the user
-                if tk.messagebox.askyesno("Budget Alert", f"Adding this expense will put you {(total+float(amt)-budget["amount"])} over your budget for {cat}. \nDo you still want to add this expense?") == False:
-                    return False
-    
-    data.append({
-        "type": "expense",
-        "id": obj.getID(),
-        "date": obj.getDate(),
-        "amount": obj.getAmount(),
-        "desc": obj.getDesc(),
-        "category": obj.getCategory(),
-        "importance": obj.getImportance()
-    })
-    
-    transactionListbox.insert("end", f"expense - {obj.getDate()} - £{obj.getAmount()} from {obj.getCategory()} - {obj.getDesc()} - {obj.getImportance()}")
-
-    save_data(data)
-
+    obj.addExpense()
 
 
 def add_bill(date, amt, desc, freq):
-    
     obj = RecurringBill(new_id(data), date, round(float(amt), 2), desc, freq)
-    
-    billAmountEntry.delete(0, tk.END)
-    billDescriptionEntry.delete(0, tk.END)
-    billDateEntry.delete(0, tk.END)
-    billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
-    
-    
-    data.append({
-        "type": "bill",
-        "id": obj.getID(),
-        "date": obj.getDate(),
-        "amount": obj.getAmount(),
-        "desc": obj.getDesc(),
-        "frequency": obj.getFrequency()
-    })
-    
-    transactionListbox.insert("end", f"bill - {obj.getDate()} - £{obj.getAmount()} from {obj.getDesc()} - every {obj.getFrequency()} days")
-    
-    save_data(data)
-    
+    obj.addBill()
     
     
 def add_budget(date, amt, cat):
     obj = Budget(new_id(data), date, round(float(amt), 2), desc=cat) # using desc as category, we can visually differentiate for the user
-    
-    budgetAmountEntry.delete(0, tk.END)
-    budgetCategoryEntry.delete(0, tk.END)
-    budgetDateEntry.delete(0, tk.END)
-    budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
-    
-    data.append({
-        "type": "budget",
-        "id": obj.getID(),
-        "date": obj.getDate(),
-        "amount": obj.getAmount(),
-        "desc": obj.getDesc()
-    })
-    
-    transactionListbox.insert("end", f"budget - {obj.getDate()} - £{obj.getAmount()} for {obj.getDesc()}")
-    updateBudgetProgress()
-    
-    save_data(data)
+    obj.addBudget()
 
 
 
-def delete_transaction():
-    selected = transactionListbox.curselection()
-    
-    if not selected:
+def delete_transaction(): 
+    index = transactionListbox.curselection()
+    if not index: # checks to make sure something is selected
         return False
     
-    item = transactionListbox.get(selected[0]).split(" - ")
+    # every time data is saved, it automatically fixes any unordered ids
+    # so the ID of the item in the listbox should match the item ID
     
+    # need to differentiate between the budget frame and not budget frame
+    # because this index only takes in account the items being displayed, which is different on the budget frame
+    # so items in data.json, after budget items, will have a difference of x between ID and listbox index, where x is the number of budgets before it
     
-    for transaction in data: # finds data exactly matching the selected item, then removes it
-        if (item[1] == transaction["date"]): # date is common to all and is not part of a large string, e.g. ("£xxx from/for xxx")
-            
-            if (item[0] == "income") and (transaction["type"] == "income"):
-                if (item[2] == f"£{transaction["amount"]} from {transaction["source"]}") and (item[3] == transaction["desc"]) and (item[4] == transaction["taxable"]):
-                    data.remove(transaction)
-                    save_data(data)
-                    break
+    if budgetFrame.winfo_ismapped():
+        for item in data:
+            if item["type"] != "budget":
+                increment += 1
+            if (item["id"] == int(index[0])+1+increment): # +1 because id indexing starts at 1
+                data.remove(item)
+                save_data(data)
+                break
         
-            elif (item[0] == "expense") and (transaction["type"] == "expense"):
-                if (item[2] == f"£{transaction["amount"]} from {transaction["category"]}") and (item[3] == transaction["desc"]) and (item[4] == transaction["importance"]):
-                    data.remove(transaction)
-                    save_data(data)
-                    break
-            
-            elif (item[0] == "bill") and (transaction["type"] == "bill"):
-                if (item[2] == f"£{transaction["amount"]} from {transaction["desc"]}") and (item[3] == f"every {str(transaction["frequency"])} days"):
-                    data.remove(transaction)
-                    save_data(data)
-                    break
-            
-            elif (item[0] == "budget") and (transaction["type"] == "budget"):
-                if (item[2] == f"£{transaction["amount"]} for {transaction["desc"]}"):
-                    data.remove(transaction)
-                    save_data(data)
-                    updateBudgetProgress()
-                    break
-
+    else:
+        for item in data:
+            if item["type"] == "budget":
+                increment += 1
+            if (item["id"] == int(index[0])+1+increment):
+                data.remove(item)
+                save_data(data)
+                break
 
     transactionListbox.delete(tk.ANCHOR)
     
     
-
-
 
 def generateForecast():
     bills = 0
@@ -375,7 +401,9 @@ def budgetReport():
 
 
 
-
+#==============================================================================================
+# TKINTER GUI - Contains the initial setup for the GUI, as well as all the frames, buttons, entrys, etc
+#==============================================================================================
 root = tk.Tk()
 root.title("FinTrack")
 root.geometry("420x480")
@@ -703,6 +731,10 @@ exitReportButton.grid(row=2, column=0, columnspan=3)
 
 
 
+
+#==============================================================================================
+# Functions - The other functions, I don't know what to call them but they allow frame switching and button validation
+#==============================================================================================
  # all functions to switch menus
  # could probably be combined into a single function, if we take the current frame as a parameter
 def showMainFrame():
