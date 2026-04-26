@@ -50,10 +50,10 @@ class Transaction():
     def getDesc(self):
         return self._desc
     
-    def addItem(self):
+    def addItem(self, type):
         # add to the data.json
         data.append({
-            "type": "",
+            "type": type,
             "id": self._id,
             "date": self._date,
             "amount":self._amount,
@@ -61,7 +61,7 @@ class Transaction():
         })
 
         # add to the end of the listbox
-        transactionListbox.insert("end", f" - {self._date} - £{self._amount} for {self._desc}")
+        transactionListbox.insert("end", f"{type} - {self._date} - £{self._amount} for {self._desc}")
         updateBudgetProgress() # update the budget progress bar
     
         save_data(data)
@@ -172,6 +172,7 @@ class RecurringBill(Transaction):
         billDateEntry.delete(0, tk.END)
         billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
         billFrequencyEntry.delete(0, tk.END)
+        billDueDateLabel.config(text="")
         
         billAmountEntry.focus_set()
     
@@ -200,6 +201,7 @@ class Budget(Transaction):
         budgetCategoryEntry.delete(0, tk.END)
         budgetDateEntry.delete(0, tk.END)
         budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        
         
         budgetAmountEntry.focus_set()
     
@@ -259,6 +261,7 @@ def save_data(data):
 def delete_transaction(): 
     index = transactionListbox.curselection()
     increment = 0
+    
     if not index: # checks to make sure something is selected
         return False
     
@@ -279,6 +282,7 @@ def delete_transaction():
             if (item["id"] == int(index[0])+1+increment): # +1 because id indexing starts at 1
                 data.remove(item)
                 save_data(data)
+                updateBudgetProgress()
                 break
         
     else:
