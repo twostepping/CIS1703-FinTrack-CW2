@@ -49,6 +49,23 @@ class Transaction():
         return self._amount
     def getDesc(self):
         return self._desc
+    
+    def addItem(self):
+        # add to the data.json
+        data.append({
+            "type": "",
+            "id": self._id,
+            "date": self._date,
+            "amount":self._amount,
+            "desc": self._desc
+        })
+
+        # add to the end of the listbox
+        transactionListbox.insert("end", f" - {self._date} - £{self._amount} for {self._desc}")
+        updateBudgetProgress() # update the budget progress bar
+    
+        save_data(data)
+        
 
 
 class Income(Transaction):
@@ -63,13 +80,17 @@ class Income(Transaction):
     def getTaxable(self):
         return self._taxable
     
-    def addIncome(self):
+    def addItem(self):
+        # clears all the entrys
         incomeEntry.delete(0, tk.END)
         incomeSourceEntry.delete(0, tk.END)
         incomeDateEntry.delete(0, tk.END)
         incomeDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
         incomeDescriptionEntry.delete(0, tk.END)
+        
+        incomeEntry.focus_set() # returns focus to the first entry, the income entry
     
+        # adds item to data
         data.append({
             "type": "income",
             "id": self._id,
@@ -81,9 +102,9 @@ class Income(Transaction):
         })
         
         
-        save_data(data)
+        save_data(data) # saves
     
-        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}")
+        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}") # adds to the listbox
 
 
 class Expense(Transaction):
@@ -98,14 +119,16 @@ class Expense(Transaction):
     def getImportance(self):
         return self.__importance
     
-    def addExpense(self):
-        total = 0
+    def addItem(self):
+        total = 0 # used for the budget alert
         
         expenseEntry.delete(0, tk.END)
         expenseCategoryEntry.delete(0, tk.END)
         expenseDateEntry.delete(0, tk.END)
         expenseDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
         expenseDescriptionEntry.delete(0, tk.END)
+        
+        expenseEntry.focus_set()
     
         # budget alert
         for budget in data: # finds the correct budget
@@ -143,12 +166,14 @@ class RecurringBill(Transaction):
     def getFrequency(self):
         return self.__frequency
     
-    def addBill(self):
+    def addItem(self):
         billAmountEntry.delete(0, tk.END)
         billDescriptionEntry.delete(0, tk.END)
         billDateEntry.delete(0, tk.END)
         billDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
         billFrequencyEntry.delete(0, tk.END)
+        
+        billAmountEntry.focus_set()
     
     
         data.append({
@@ -169,12 +194,14 @@ class Budget(Transaction):
     def __init__(self, id, date, amount, desc):
         super().__init__(id, date, amount, desc)
         
-    def addBudget(self):
+    def addItem(self):
         # these clear the entrys on the budget frame, so that the user doesn't have to do it themself
         budgetAmountEntry.delete(0, tk.END)
         budgetCategoryEntry.delete(0, tk.END)
         budgetDateEntry.delete(0, tk.END)
         budgetDateEntry.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        
+        budgetAmountEntry.focus_set()
     
         # add to the data.json
         data.append({
@@ -227,6 +254,43 @@ def save_data(data):
     # overwrites existing data with the new data
     with open(FILE, "w") as f:
         json.dump(data, f, indent=4)
+        
+
+def delete_transaction(): 
+    index = transactionListbox.curselection()
+    increment = 0
+    if not index: # checks to make sure something is selected
+        return False
+    
+    if tk.messagebox.askyesno("Confirmation", f"Are you sure you want to delete this item?") == False:
+        return False
+    
+    # every time data is saved, it automatically fixes any unordered ids
+    # so the ID of the item in the listbox should match the item ID
+    
+    # need to differentiate between the budget frame and not budget frame
+    # because this index only takes in account the items being displayed, which is different on the budget frame
+    # so items in data.json, after budget items, will have a difference of x between ID and listbox index, where x is the number of budgets before it
+    
+    if budgetFrame.winfo_ismapped():
+        for item in data:
+            if item["type"] != "budget":
+                increment += 1
+            if (item["id"] == int(index[0])+1+increment): # +1 because id indexing starts at 1
+                data.remove(item)
+                save_data(data)
+                break
+        
+    else:
+        for item in data:
+            if item["type"] == "budget":
+                increment += 1
+            if (item["id"] == int(index[0])+1+increment):
+                data.remove(item)
+                save_data(data)
+                break
+
+    transactionListbox.delete(tk.ANCHOR)
 
 
 #==============================================================================================
@@ -294,57 +358,22 @@ for item in data:
 
 def add_income(date, amt, desc, src, taxable):
     obj = Income(new_id(data), date, round(float(amt), 2), desc, src, taxable)
-    obj.addIncome()
+    obj.addItem()
 
 
 def add_expense(date, amt, desc, cat, imp):
     obj = Expense(new_id(data), date, round(float(amt), 2), desc, cat, imp)
-    obj.addExpense()
+    obj.addItem()
 
 
 def add_bill(date, amt, desc, freq):
     obj = RecurringBill(new_id(data), date, round(float(amt), 2), desc, freq)
-    obj.addBill()
+    obj.addItem()
     
     
 def add_budget(date, amt, cat):
     obj = Budget(new_id(data), date, round(float(amt), 2), desc=cat) # using desc as category, we can visually differentiate for the user
-    obj.addBudget()
-
-
-
-def delete_transaction(): 
-    index = transactionListbox.curselection()
-    increment = 0
-    if not index: # checks to make sure something is selected
-        return False
-    
-    # every time data is saved, it automatically fixes any unordered ids
-    # so the ID of the item in the listbox should match the item ID
-    
-    # need to differentiate between the budget frame and not budget frame
-    # because this index only takes in account the items being displayed, which is different on the budget frame
-    # so items in data.json, after budget items, will have a difference of x between ID and listbox index, where x is the number of budgets before it
-    
-    if budgetFrame.winfo_ismapped():
-        for item in data:
-            if item["type"] != "budget":
-                increment += 1
-            if (item["id"] == int(index[0])+1+increment): # +1 because id indexing starts at 1
-                data.remove(item)
-                save_data(data)
-                break
-        
-    else:
-        for item in data:
-            if item["type"] == "budget":
-                increment += 1
-            if (item["id"] == int(index[0])+1+increment):
-                data.remove(item)
-                save_data(data)
-                break
-
-    transactionListbox.delete(tk.ANCHOR)
+    obj.addItem()
     
     
 
