@@ -234,9 +234,10 @@ def load_data():
     try:
         with open(FILE, "r") as f:
             return json.load(f)
-    except:
-        print("File error, starting fresh")
-        return []
+            
+    except json.JSONDecodeError:
+    messagebox.showwarning("Data Error", "Data file corrupted. Starting fresh.")
+    return []
 
 
 def save_data(data):
