@@ -75,10 +75,11 @@ class Income(Transaction):
         self._taxable = taxable
 
     # GETTERS
-    def getSource(self):
-        return self._source
-    def getTaxable(self):
-        return self._taxable
+    def getCategory(self):
+        return self._category
+
+    def getImportance(self):
+        return self._importance
     
     def addItem(self):
         # clears all the entrys
