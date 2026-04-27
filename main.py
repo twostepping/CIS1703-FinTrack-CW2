@@ -1,7 +1,10 @@
 # --- Extra comments for team members ---
-# could add edit/delete transactions
-# go back feature
-# could improve report visuals further
+# previously used __ in class attributes which invokes name mangling and causes errors with inheritance
+# now using _, which still enables private attributes
+# ------------------------------
+# tk.messagebox.askyesno doesn't always work for some reason - it causes errors when switching pcs?
+# messagebox.askyesno worked on both pcs I tried on, so I'll keep to that
+
 
 # domain entities: 
 # base class: transaction(ID, date, amount, description)
@@ -15,13 +18,6 @@
 # budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
 # reporting: generate a summary showing needs vs wants for the user
 
-# corrected attribute access to match single underscore naming convention
-# previously used __ which does not exist and causes attribute errors
-
-
-# added success feedback message for income transactions
-# added success feedback message for expense transactions
-# added success feedback message for recurring bills
 
 
 #==============================================================================================
@@ -85,10 +81,9 @@ class Income(Transaction):
 
     # GETTERS
     def getCategory(self):
-        return self._category
-
+        return self._source
     def getImportance(self):
-        return self._importance
+        return self._taxable
     
     def addItem(self):
         # clears all the entrys
@@ -111,11 +106,9 @@ class Income(Transaction):
             "taxable": self._taxable
         })
         
-                
-        save_data(data)
-        
         transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}")
-        
+        save_data(data)
+
         # provide feedback so user knows action was successful
         messagebox.showinfo("Success", "Income added successfully")
 
@@ -128,9 +121,9 @@ class Expense(Transaction):
 
     # GETTERS
     def getCategory(self):
-        return self.__category
+        return self._category
     def getImportance(self):
-        return self.__importance
+        return self._importance
     
     def addItem(self):
         total = 0 # used for the budget alert
@@ -150,13 +143,13 @@ class Expense(Transaction):
                     if item["type"] == "expense" and item["category"] == self._category:
                         total += item["amount"]
             
-              # calculate how much the user will exceed the budget by
+                # calculate how much the user will exceed the budget by
                 over = round((total + float(self._amount)) - budget["amount"], 2)
                 
                 # check if adding this expense exceeds the budget
                 if total + float(self._amount) > budget["amount"]:
                     # clearer, formatted warning message for better user understanding
-                    if not tk.messagebox.askyesno(
+                    if not messagebox.askyesno(
                         "Budget Alert",
                         f"Warning: This expense exceeds your '{self._category}' budget by £{over}.\n\nDo you want to continue?"
                     ):
@@ -171,11 +164,10 @@ class Expense(Transaction):
             "category": self._category,
             "importance": self._importance
         })
-        
-        save_data(data)
-        
+
         transactionListbox.insert("end", f"expense - {self._date} - £{self._amount} from {self._category} - {self._desc} - {self._importance}")
-        
+        save_data(data)
+
         # confirms to user that expense was successfully added
         messagebox.showinfo("Success", "Expense added successfully")
 
@@ -212,8 +204,9 @@ class RecurringBill(Transaction):
         })
     
         transactionListbox.insert("end", f"bill - {self._date} - £{self._amount} from {self._desc} - every {self._frequency} days")
-    
         save_data(data)
+
+        messagebox.showinfo("Success", "Bill added successfully")
 
     
 class Budget(Transaction):
@@ -242,8 +235,9 @@ class Budget(Transaction):
         # add to the end of the listbox
         transactionListbox.insert("end", f"budget - {self._date} - £{self._amount} for {self._desc}")
         updateBudgetProgress() # update the budget progress bar
-    
         save_data(data)
+
+        messagebox.showinfo("Success", "Budget added successfully")
 
 #==============================================================================================
 # File handling and validation functions. These functions manage loading and saving data to a JSON file, as well as validating user input for dates, amounts, and text fields.
@@ -256,7 +250,7 @@ def load_data():
         with open(FILE, "r") as f:
             return json.load(f)
             
-        except json.JSONDecodeError:
+    except json.JSONDecodeError:
         messagebox.showwarning("Data Error", "Data file corrupted. Starting fresh.")
         return []
 
@@ -291,7 +285,7 @@ def delete_transaction():
     if not index: # checks to make sure something is selected
         return False
     
-    if tk.messagebox.askyesno("Confirmation", f"Are you sure you want to delete this item?") == False:
+    if messagebox.askyesno("Confirmation", f"Are you sure you want to delete this item?") == False:
         return False
     
     # every time data is saved, it automatically fixes any unordered ids
@@ -416,16 +410,16 @@ def generateForecast():
     )
 
     bills = 0
-for x in data:
-    if x["type"] == "bill":
-        try:
-            freq = int(x["frequency"])
-            if freq > 0:
-                bills += x["amount"] * (30 // freq)
-        except:
-            continue      # finds all the bills and multiply amount paid by how many days you'll pay in the 30 days.
+    for x in data:
+        if x["type"] == "bill":
+            try:
+                freq = int(x["frequency"])
+                if freq > 0:
+                    bills += x["amount"] * (30 // freq)
+            except:
+                continue      # finds all the bills and multiply amount paid by how many days you'll pay in the 30 days.
 
-    reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}") # show the user
+        reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}") # show the user
 
 
 def generateReport():
