@@ -285,7 +285,7 @@ def delete_transaction():
     if not index: # checks to make sure something is selected
         return False
     
-    if messagebox.askyesno("Confirmation", f"Are you sure you want to delete this item?") == False:
+    if messagebox.askyesno("Confirmation", f"Delete this transaction permanently?") == False:
         return False
     
     # every time data is saved, it automatically fixes any unordered ids
