@@ -394,7 +394,15 @@ def generateForecast():
         for x in data if x["type"] in ["income", "expense"]
     )
 
-    bills = sum(x["amount"] * int(30//int(x["frequency"])) for x in data if x["type"] == "bill") # find all the bills and multiply amount paid by how many days you'll pay in the 30 days
+    bills = 0
+for x in data:
+    if x["type"] == "bill":
+        try:
+            freq = int(x["frequency"])
+            if freq > 0:
+                bills += x["amount"] * (30 // freq)
+        except:
+            continue      # finds all the bills and multiply amount paid by how many days you'll pay in the 30 days.
 
     reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}") # show the user
 
