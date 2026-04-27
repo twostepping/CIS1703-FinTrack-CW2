@@ -106,7 +106,10 @@ class Income(Transaction):
             "taxable": self._taxable
         })
         
-        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}")
+        transactionListbox.insert(
+            "end",
+            f"[INCOME] £{self._amount} | {self._source} | {self._date}"
+        )
         save_data(data)
 
         # provide feedback so user knows action was successful
