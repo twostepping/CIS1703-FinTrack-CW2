@@ -430,7 +430,7 @@ def generateForecast():
             except:
                 continue      # finds all the bills and multiply amount paid by how many days you'll pay in the 30 days.
 
-        reportLabel.config(text=f"Balance: £{balance} \n30 Day Prediction: £{balance-bills}") # show the user
+        reportLabel.config(text=f"Current Balance: £{balance}\nAfter 30 Days: £{balance-bills}")
 
 
 def generateReport():
