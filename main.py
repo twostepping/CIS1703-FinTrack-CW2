@@ -18,6 +18,12 @@
 # corrected attribute access to match single underscore naming convention
 # previously used __ which does not exist and causes attribute errors
 
+
+# added success feedback message for income transactions
+# added success feedback message for expense transactions
+# added success feedback message for recurring bills
+
+
 #==============================================================================================
 #Importing all necessary modules, including json for file handling, os for clearing the console, datetime for handling dates, and tkinter for the GUI.
 #==============================================================================================
@@ -105,10 +111,13 @@ class Income(Transaction):
             "taxable": self._taxable
         })
         
+                
+        save_data(data)
         
-        save_data(data) # saves
-    
-        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}") # adds to the listbox
+        transactionListbox.insert("end", f"income - {self._date} - £{self._amount} from {self._source} - {self._desc} - {self._taxable}")
+        
+        # provide feedback so user knows action was successful
+        messagebox.showinfo("Success", "Income added successfully")
 
 
 class Expense(Transaction):
@@ -162,9 +171,13 @@ class Expense(Transaction):
             "category": self._category,
             "importance": self._importance
         })
+        
         save_data(data)
-    
+        
         transactionListbox.insert("end", f"expense - {self._date} - £{self._amount} from {self._category} - {self._desc} - {self._importance}")
+        
+        # confirms to user that expense was successfully added
+        messagebox.showinfo("Success", "Expense added successfully")
 
 
 
@@ -243,9 +256,9 @@ def load_data():
         with open(FILE, "r") as f:
             return json.load(f)
             
-    except json.JSONDecodeError:
-    messagebox.showwarning("Data Error", "Data file corrupted. Starting fresh.")
-    return []
+        except json.JSONDecodeError:
+        messagebox.showwarning("Data Error", "Data file corrupted. Starting fresh.")
+        return []
 
 
 def save_data(data):
