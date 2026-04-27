@@ -574,7 +574,7 @@ taxableRadio1.grid(row=4, column=2)
 incomeWarningLabel.grid(row=5, column=0, columnspan=3)
 
 #Confirm adding income button
-confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
+confirmIncomeButton = tk.Button(incomeFrame, text="Add income", font=("Arial", 12), command=lambda:add_income(incomeDateEntry.get(), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get()))
 confirmIncomeButton.grid(row=6, column=0, columnspan=3)
 # delete button
 deleteIncomeButton = tk.Button(incomeFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
@@ -626,7 +626,7 @@ importanceRadio1.grid(row=4, column=2)
 expenseWarningLabel.grid(row=5, column=0, columnspan=3)
 
 #Confirm adding expense button
-confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()) )
+confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:(expenseDateEntry.get(), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()) )
 confirmExpenseButton.grid(row=6, column=0, columnspan=3)
 # delete button
 deleteExpenseButton = tk.Button(expenseFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
@@ -680,7 +680,7 @@ billDueDateLabel.grid(row=4, column=1)
 billWarningLabel.grid(row=5, column=0, columnspan=2)
 
 #confirm adding bill button
-confirmBillButton = tk.Button(billFrame, text="Add Recurring Bill", font=("Arial", 12), command=lambda:add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
+confirmBillButton = tk.Button(billFrame, text="Add Recurring Bill", font=("Arial", 12), command=lambda:add_bill(billDateEntry.get(), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
 confirmBillButton.grid(row=6, column=0, columnspan=2)
 # delete button
 deleteBillButton = tk.Button(billFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
@@ -719,7 +719,7 @@ budgetDateEntry.grid(row=2, column=1)
 budgetWarningLabel.grid(row=4, column=0, columnspan=2)
 
 # add budget
-confirmBudgetButton = tk.Button(budgetFrame, text="Add Budget", font=("Arial", 12), command=lambda:add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
+confirmBudgetButton = tk.Button(budgetFrame, text="Add Budget", font=("Arial", 12), command=lambda:add_budget(budgetDateEntry.get(), budgetAmountEntry.get(), budgetCategoryEntry.get()))
 confirmBudgetButton.grid(row=6, column=0, columnspan=2)
 # delete button
 deleteBudgetButton = tk.Button(budgetFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
@@ -857,7 +857,7 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(incomeDateEntry.get()) and valid_amount(incomeEntry.get()) and valid_text(incomeSourceEntry.get()):
             confirmIncomeButton.config(state='active')
             incomeWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
-            root.bind("<Return>", lambda event: add_income(datetime.now().strftime("%d/%m/%Y"), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get())) # allows user to press enter to add
+            root.bind("<Return>", lambda event: add_income(incomeDateEntry.get(), incomeEntry.get().lstrip('0'), incomeDescriptionEntry.get(), incomeSourceEntry.get(), taxableOption.get())) # allows user to press enter to add
         else:
             confirmIncomeButton.config(state='disabled')
             incomeWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
@@ -868,7 +868,7 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(expenseDateEntry.get()) and valid_amount(expenseEntry.get()) and valid_text(expenseCategoryEntry.get()):
             confirmExpenseButton.config(state='active')
             expenseWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
-            root.bind("<Return>", lambda event: add_expense(datetime.now().strftime("%d/%m/%Y"), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()))
+            root.bind("<Return>", lambda event: add_expense(expenseDateEntry.get(), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()))
         else:
             root.unbind("<Return>")
             confirmExpenseButton.config(state='disabled')
@@ -878,7 +878,7 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(billDateEntry.get()) and valid_amount(billAmountEntry.get()) and valid_num(billFrequencyEntry.get()) and valid_text(billDescriptionEntry.get()):
             confirmBillButton.config(state='active')
             billWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
-            root.bind("<Return>", lambda event: add_bill(datetime.now().strftime("%d/%m/%Y"), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
+            root.bind("<Return>", lambda event: add_bill(billDateEntry.get(), billAmountEntry.get().lstrip('0'), billDescriptionEntry.get(), billFrequencyEntry.get()))
         else:
             confirmBillButton.config(state='disabled')
             billWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
@@ -888,7 +888,7 @@ def buttonval(): # prevents the user from adding things until all required field
         if valid_date(budgetDateEntry.get()) and valid_amount(budgetAmountEntry.get()) and valid_text(budgetCategoryEntry.get()):
             confirmBudgetButton.config(state='active')
             budgetWarningLabel.config(text="Notice: All fields have a valid entry.", fg="Green")
-            root.bind("<Return>", lambda event: add_budget(datetime.now().strftime("%d/%m/%Y"), budgetAmountEntry.get(), budgetCategoryEntry.get()))
+            root.bind("<Return>", lambda event: add_budget(budgetDateEntry.get(), budgetAmountEntry.get(), budgetCategoryEntry.get()))
         else:
             confirmBudgetButton.config(state='disabled')
             budgetWarningLabel.config(text="Notice: All fields must have a valid entry.", fg="Red")
