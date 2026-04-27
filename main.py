@@ -322,7 +322,9 @@ def delete_transaction():
 #==============================================================================================
 def valid_date(d):
     try:
-        datetime.strptime(d, "%d/%m/%Y")
+        date = datetime.strptime(d, "%d/%m/%Y")
+        if date > datetime.now():
+            return False
         return True
     except:
         return False
