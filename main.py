@@ -15,6 +15,9 @@
 # budget alerts: users set a budget for a cateogry, system must warn them if a new expense pushes them over
 # reporting: generate a summary showing needs vs wants for the user
 
+# corrected attribute access to match single underscore naming convention
+# previously used __ which does not exist and causes attribute errors
+
 #==============================================================================================
 #Importing all necessary modules, including json for file handling, os for clearing the console, datetime for handling dates, and tkinter for the GUI.
 #==============================================================================================
@@ -165,7 +168,7 @@ class RecurringBill(Transaction):
 
     # GETTERS 
     def getFrequency(self):
-        return self.__frequency
+        return self._frequency
     
     def addItem(self):
         billAmountEntry.delete(0, tk.END)
