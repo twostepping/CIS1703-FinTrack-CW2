@@ -141,8 +141,16 @@ class Expense(Transaction):
                     if item["type"] == "expense" and item["category"] == self._category:
                         total += item["amount"]
             
-                if total + float(self._amount) > budget["amount"]: # if over budget, alert the user
-                    if tk.messagebox.askyesno("Budget Alert", f"Adding this expense will put you {(total+float(self._amount)-budget["amount"])} over your budget for {self._category}. \nDo you still want to add this expense?") == False:
+              # calculate how much the user will exceed the budget by
+                over = round((total + float(self._amount)) - budget["amount"], 2)
+                
+                # check if adding this expense exceeds the budget
+                if total + float(self._amount) > budget["amount"]:
+                    # clearer, formatted warning message for better user understanding
+                    if not tk.messagebox.askyesno(
+                        "Budget Alert",
+                        f"Warning: This expense exceeds your '{self._category}' budget by £{over}.\n\nDo you want to continue?"
+                    ):
                         return False
     
         data.append({
