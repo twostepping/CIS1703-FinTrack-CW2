@@ -625,17 +625,38 @@ importanceRadio1.grid(row=4, column=2)
 
 expenseWarningLabel.grid(row=5, column=0, columnspan=3)
 
-#Confirm adding expense button
-confirmExpenseButton = tk.Button(expenseFrame, text="Add expense", font=("Arial", 12), command=lambda:(expenseDateEntry.get(), expenseEntry.get().lstrip('0'), expenseDescriptionEntry.get(), expenseCategoryEntry.get(), importanceOption.get()) )
+# Confirm adding expense button
+confirmExpenseButton = tk.Button(
+    expenseFrame,
+    text="Add expense",
+    font=("Arial", 12),
+    command=lambda: add_expense(
+        expenseDateEntry.get(),
+        expenseEntry.get().strip(),
+        expenseDescriptionEntry.get(),
+        expenseCategoryEntry.get(),
+        importanceOption.get()
+    )
+)
 confirmExpenseButton.grid(row=6, column=0, columnspan=3)
-# delete button
-deleteExpenseButton = tk.Button(expenseFrame, text="Delete Selected", font=("Arial",12), command=lambda: delete_transaction())
+
+# Delete button
+deleteExpenseButton = tk.Button(
+    expenseFrame,
+    text="Delete Selected",
+    font=("Arial", 12),
+    command=delete_transaction
+)
 deleteExpenseButton.grid(row=7, column=0, columnspan=3)
 
-#exit button
-exitExpenseButton = tk.Button(expenseFrame, text="Exit", font=("Arial", 12), command=lambda:showMainFrame())
+# Exit button
+exitExpenseButton = tk.Button(
+    expenseFrame,
+    text="Exit",
+    font=("Arial", 12),
+    command=showMainFrame
+)
 exitExpenseButton.grid(row=8, column=0, columnspan=3)
-
 
 
 
