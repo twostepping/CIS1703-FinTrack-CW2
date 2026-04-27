@@ -209,7 +209,10 @@ class RecurringBill(Transaction):
             "frequency": self._frequency
         })
     
-        transactionListbox.insert("end", f"bill - {self._date} - £{self._amount} from {self._desc} - every {self._frequency} days")
+        transactionListbox.insert(
+            "end",
+            f"[BILL] £{self._amount} | {self._desc} | every {self._frequency} days"
+        )
         save_data(data)
 
         messagebox.showinfo("Success", "Bill added successfully")
