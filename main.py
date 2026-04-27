@@ -165,7 +165,10 @@ class Expense(Transaction):
             "importance": self._importance
         })
 
-        transactionListbox.insert("end", f"expense - {self._date} - £{self._amount} from {self._category} - {self._desc} - {self._importance}")
+        transactionListbox.insert(
+            "end",
+            f"[EXPENSE] £{self._amount} | {self._category} | {self._date}"
+        )
         save_data(data)
 
         # confirms to user that expense was successfully added
