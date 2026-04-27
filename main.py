@@ -435,7 +435,10 @@ def generateReport():
         if str(x.get("importance", "")).lower() == "want"
     )
     
-    reportLabel.config(text=f"Needs: £{needs}\n Wants: £{wants}") # present to user
+    reportLabel.config(text=f"""
+    Needs: £{needs} {'█' * int(needs/10)}
+    Wants: £{wants} {'█' * int(wants/10)}
+    """)
     
 
 def budgetReport():
