@@ -108,7 +108,7 @@ class Income(Transaction):
         
         transactionListbox.insert(
             "end",
-            f"[INCOME] £{self._amount} | {self._source} | {self._date}"
+            f"[INCOME] {self._date} | £{self._amount} | {self._source} | {self._desc} | {self._taxable}"
         )
         save_data(data)
 
@@ -170,7 +170,7 @@ class Expense(Transaction):
 
         transactionListbox.insert(
             "end",
-            f"[EXPENSE] £{self._amount} | {self._category} | {self._date}"
+            f"[EXPENSE] {self._date} | £{self._amount} | {self._category} | {self._desc} | {self._importance}"
         )
         save_data(data)
 
@@ -211,7 +211,7 @@ class RecurringBill(Transaction):
     
         transactionListbox.insert(
             "end",
-            f"[BILL] £{self._amount} | {self._desc} | every {self._frequency} days"
+            f"[BILL] {self._date} | £{self._amount} | {self._desc} | every {self._frequency} days"
         )
         save_data(data)
 
@@ -242,7 +242,7 @@ class Budget(Transaction):
         })
 
         # add to the end of the listbox
-        transactionListbox.insert("end", f"budget - {self._date} - £{self._amount} for {self._desc}")
+        transactionListbox.insert("end", f"[BUDGET] {self._date} | £{self._amount} | {self._desc}")
         updateBudgetProgress() # update the budget progress bar
         save_data(data)
 
@@ -335,7 +335,7 @@ def valid_date(d):
         if date > datetime.now():
             return False
         return True
-    except:
+    except ValueError:
         return False
 
 
@@ -444,10 +444,17 @@ def generateReport():
         if str(x.get("importance", "")).lower() == "want"
     )
     
-    reportLabel.config(text=f"""
-    Needs: £{needs} {'█' * int(needs/10)}
-    Wants: £{wants} {'█' * int(wants/10)}
-    """)
+    # not sure what this black bar is meant to be
+    # thought it was like the budget progress bar, showing
+    # how much of total expenses are needs vs wants but it's just
+    # a black bar that grows in size according to the amount
+    
+    #reportLabel.config(text=f"""
+    #Needs: £{needs} {'█' * int(needs/10)}
+    #Wants: £{wants} {'█' * int(wants/10)}
+    #""")
+    
+    reportLabel.config(text=f"Needs: £{needs}\nWants: £{wants}")
     
 
 def budgetReport():
@@ -517,11 +524,11 @@ transactionScrollbarY.pack(side="right", fill="y")
 def loadListbox():
     for item in data:
         if item['type'] == "income":
-            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['source']} - {item['desc']} - {item['taxable']}")
+            transactionListbox.insert("end", f"[{item['type'].upper()}] {item['date']} | £{item['amount']} | {item['source']} | {item['desc']} | {item['taxable']}")
         elif item['type'] == "expense":
-            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['category']} - {item['desc']} - {item['importance']}")
+            transactionListbox.insert("end", f"[{item['type'].upper()}] {item['date']} | £{item['amount']} | {item['category']} | {item['desc']} | {item['importance']}")
         elif item['type'] == "bill":
-            transactionListbox.insert("end", f"{item['type']} - {item['date']} - £{item['amount']} from {item['desc']} - every {item['frequency']} days")
+            transactionListbox.insert("end", f"[{item['type'].upper()}] {item['date']} | £{item['amount']} | {item['desc']} | every {item['frequency']} days")
 loadListbox()
 
 
@@ -655,11 +662,12 @@ confirmExpenseButton = tk.Button(
 confirmExpenseButton.grid(row=6, column=0, columnspan=3)
 
 # Delete button
+# lambda prevents the functions from immediatly running
 deleteExpenseButton = tk.Button(
     expenseFrame,
     text="Delete Selected",
     font=("Arial", 12),
-    command=delete_transaction
+    command=lambda:delete_transaction()
 )
 deleteExpenseButton.grid(row=7, column=0, columnspan=3)
 
@@ -668,7 +676,7 @@ exitExpenseButton = tk.Button(
     expenseFrame,
     text="Exit",
     font=("Arial", 12),
-    command=showMainFrame
+    command=lambda:showMainFrame()
 )
 exitExpenseButton.grid(row=8, column=0, columnspan=3)
 
@@ -882,7 +890,7 @@ def showBudgetFrame(): # reusing transactionListbox to show budgets when in this
     transactionListbox.delete(0, tk.END) # clears the listbox
     for x in data: # loops through the data to find budgets and adds them
         if x['type'] == "budget":
-            transactionListbox.insert("end", f"{x['type']} - {x['date']} - £{x['amount']} for {x['desc']}")
+            transactionListbox.insert("end", f"[{x['type'].upper()}] {x['date']} | £{x['amount']} | {x['desc']}")
     
     
 
